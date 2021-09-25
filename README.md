@@ -7,9 +7,9 @@ This game is developed as part of the [Quantum Games Hackathon 2021](https://www
 ## Installation
 
 The use of a conda environment is recommended:
-> conda create -n <env-name> python
+> conda create -n \<env-name\> python
 >
-> conda activate <env-name>
+> conda activate \<env-name\>
 
 Required packages
 

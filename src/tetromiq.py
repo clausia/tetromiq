@@ -1,3 +1,4 @@
+from pathlib import Path
 from board import *
 
 
@@ -12,6 +13,8 @@ def game():
     run = True
     paused = False
     game_over = False
+    fall_speed = INITIAL_FALL_SPEED
+    level = 1
     # Create background.
     background = pygame.Surface(screen.get_size())
     bgcolor = (0, 0, 0)
@@ -20,9 +23,11 @@ def game():
     draw_grid(background)
     # This makes blitting faster.
     background = background.convert()
+    
+    font = pygame.font.SysFont(None, 30)
 
     try:
-        font = pygame.font.Font("../resources/Roboto-Regular.ttf", 20)
+        font = pygame.font.Font(Path("../resources/Roboto-Regular.ttf"), 20)
     except OSError:
         # If the font file is not available, the default will be used.
         pass
@@ -37,7 +42,7 @@ def game():
     MOVEMENT_KEYS = pygame.K_LEFT, pygame.K_RIGHT, pygame.K_DOWN
     EVENT_UPDATE_CURRENT_BLOCK = pygame.USEREVENT + 1
     EVENT_MOVE_CURRENT_BLOCK = pygame.USEREVENT + 2
-    pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, 1000)
+    pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
     pygame.time.set_timer(EVENT_MOVE_CURRENT_BLOCK, 100)
 
     blocks = BlocksGroup()
@@ -86,6 +91,14 @@ def game():
             draw_centered_surface(screen, game_over_text, 360)
         # Update.
         pygame.display.flip()
+
+        # Increase falling speed
+        if blocks.score >= SCORE_CHANGE_LEVEL * level:
+            level += 1
+            fall_speed = fall_speed - (FALL_SPEED_DECREMENT if fall_speed > MIN_FALL_SPEED else 0)
+            pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, 0)
+            pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
+
 
     pygame.quit()
 

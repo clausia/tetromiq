@@ -1,3 +1,4 @@
+from pathlib import Path
 from board import *
 
 
@@ -22,7 +23,7 @@ def game():
     background = background.convert()
 
     try:
-        font = pygame.font.Font("../resources/Roboto-Regular.ttf", 20)
+        font = pygame.font.Font(Path("../resources/Roboto-Regular.ttf"), 20)
     except OSError:
         # If the font file is not available, the default will be used.
         pass

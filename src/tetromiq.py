@@ -83,15 +83,24 @@ def game():
         screen.blit(background, (0, 0))
         # Blocks.
         blocks.draw(screen)
-        # Sidebar with misc. information.
-        draw_centered_surface(screen, next_block_text, 50)
-        draw_centered_surface(screen, blocks.next_block.image, 100)
-        draw_centered_surface(screen, score_msg_text, 240)
-        draw_centered_surface(screen, lines_msg_text, 320)
+        # Game information.
+        draw_centered_surface(screen, next_block_text, 20)
+        height_blocks = 0
+        for i in range(len(blocks.next_blocks)):
+            draw_centered_surface(screen, blocks.next_blocks[i].small_image,
+                                  40 + 20*(i+1) + height_blocks)
+            height_blocks += blocks.next_blocks[i].small_image.get_height()
+        # Separate the blocks coming from the counters.
+        pygame.draw.line(background, (50, 50, 50), (GRID_WIDTH, 308), (WINDOW_WIDTH, 308))
+        # Place a black rectangle to hide the pieces that exceed the separation line.
+        pygame.draw.rect(screen, (0, 0, 0), pygame.Rect(GRID_WIDTH + 1, 309, WINDOW_WIDTH, 339))
+        # Counters.
+        draw_centered_surface(screen, score_msg_text, 340)
+        draw_centered_surface(screen, lines_msg_text, 420)
         score_text = font.render(str(blocks.score), True, (255, 255, 255), bgcolor)
         lines_num_text = font.render(str(blocks.lines), True, (255, 255, 255), bgcolor)
-        draw_centered_surface(screen, score_text, 270)
-        draw_centered_surface(screen, lines_num_text, 350)
+        draw_centered_surface(screen, score_text, 370)
+        draw_centered_surface(screen, lines_num_text, 450)
         if game_over:
             draw_centered_surface(screen, game_over_text, 400)
         # Update.
@@ -103,7 +112,6 @@ def game():
             fall_speed = fall_speed - (FALL_SPEED_DECREMENT if fall_speed > MIN_FALL_SPEED else 0)
             pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, 0)
             pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
-
 
     pygame.quit()
 

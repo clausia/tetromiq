@@ -6,21 +6,22 @@ import pygame
 
 class BlocksGroup(pygame.sprite.OrderedUpdates):
 
-    @staticmethod
-    def get_random_block():
-        return np.random.choice((SquareBlock, TBlock, LineBlock, LBlock, LIBlock, ZBlock, ZIBlock))()
-
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
         self._reset_grid()
         self._ignore_next_stop = False
         self.score = 0
         self.lines = 0
-        self.next_block = None
+        self.next_blocks = []
         # Not really moving, just to initialize the attribute.
         self.stop_moving_current_block()
         # The first block.
         self._create_new_block()
+
+    def _get_random_block(self):
+        while len(self.next_blocks) < PREVIEW_BLOCKS:
+            self.next_blocks.append(
+                np.random.choice((SquareBlock, TBlock, LineBlock, LBlock, LIBlock, ZBlock, ZIBlock))())
 
     def _check_line_completion(self):
         """
@@ -82,13 +83,14 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         self.grid = [[0 for _ in range(NUM_ROWS)] for _ in range(NUM_COLUMNS)]
 
     def _create_new_block(self):
-        new_block = self.next_block or BlocksGroup.get_random_block()
+        self._get_random_block()
+        new_block = self.next_blocks.pop(0)
         if Block.collide(new_block, self):
             raise TopReached
         self.add(new_block)
-        self.next_block = BlocksGroup.get_random_block()
         self.update_grid()
         self._check_line_completion()
+        self._get_random_block()
 
     def update_grid(self):
         self._reset_grid()
@@ -158,15 +160,14 @@ def draw_grid(background):
     # Vertical lines.
     for i in range(NUM_ROWS + 1):
         x = TILE_SIZE * i
-        pygame.draw.line(
-            background, grid_color, (x, 0), (x, GRID_HEIGHT)
-        )
-    # Horizontal liens.
+        pygame.draw.line(background, grid_color,
+                         (x, 0), (x, GRID_HEIGHT))
+    # Horizontal lines.
     for i in range(NUM_COLUMNS + 1):
         y = TILE_SIZE * i
-        pygame.draw.line(
-            background, grid_color, (0, y), (GRID_WIDTH, y)
-        )
+        pygame.draw.line(background, grid_color,
+                         (0, y), (GRID_WIDTH, y))
+
 
 def remove_empty_columns(arr, _x_offset=0, _keep_counting=True):
     """

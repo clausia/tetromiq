@@ -35,6 +35,8 @@ def game():
         "Next:", True, (255, 255, 255), bgcolor)
     score_msg_text = font.render(
         "Score:", True, (255, 255, 255), bgcolor)
+    lines_msg_text = font.render(
+        "Lines:", True, (255, 255, 255), bgcolor)
     game_over_text = font.render(
         "Game Over", True, (255, 220, 0), bgcolor)
 
@@ -85,8 +87,11 @@ def game():
         draw_centered_surface(screen, next_block_text, 50)
         draw_centered_surface(screen, blocks.next_block.image, 100)
         draw_centered_surface(screen, score_msg_text, 240)
+        draw_centered_surface(screen, lines_msg_text, 320)
         score_text = font.render(str(blocks.score), True, (255, 255, 255), bgcolor)
+        lines_num_text = font.render(str(blocks.lines), True, (255, 255, 255), bgcolor)
         draw_centered_surface(screen, score_text, 270)
+        draw_centered_surface(screen, lines_num_text, 350)
         if game_over:
             draw_centered_surface(screen, game_over_text, 360)
         # Update.

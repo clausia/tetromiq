@@ -93,7 +93,7 @@ def game():
         draw_centered_surface(screen, score_text, 270)
         draw_centered_surface(screen, lines_num_text, 350)
         if game_over:
-            draw_centered_surface(screen, game_over_text, 360)
+            draw_centered_surface(screen, game_over_text, 400)
         # Update.
         pygame.display.flip()
 

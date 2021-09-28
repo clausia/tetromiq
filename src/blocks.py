@@ -32,8 +32,12 @@ class Block(pygame.sprite.Sprite):
     def _draw(self, x=4, y=0):
         width = len(self.struct[0]) * TILE_SIZE
         height = len(self.struct) * TILE_SIZE
+        small_width = len(self.struct[0]) * SMALL_TILE_SIZE
+        small_height = len(self.struct) * SMALL_TILE_SIZE
         self.image = pygame.surface.Surface([width, height])
         self.image.set_colorkey((0, 0, 0))
+        self.small_image = pygame.surface.Surface([small_width, small_height])
+        self.small_image.set_colorkey((0, 0, 0))
         # Position and size
         self.rect = pygame.Rect(0, 0, width, height)
         self.x = x
@@ -41,12 +45,12 @@ class Block(pygame.sprite.Sprite):
         for y, row in enumerate(self.struct):
             for x, col in enumerate(row):
                 if col:
-                    pygame.draw.rect(
-                        self.image,
-                        self.color,
-                        pygame.Rect(x * TILE_SIZE + 1, y * TILE_SIZE + 1,
-                                    TILE_SIZE - 2, TILE_SIZE - 2)
-                    )
+                    pygame.draw.rect(self.image, self.color,
+                                     pygame.Rect(x * TILE_SIZE + 1, y * TILE_SIZE + 1,
+                                                 TILE_SIZE - 2, TILE_SIZE - 2))
+                    pygame.draw.rect(self.small_image, self.color,
+                                     pygame.Rect(x * SMALL_TILE_SIZE + 1, y * SMALL_TILE_SIZE + 1,
+                                                 SMALL_TILE_SIZE - 2, SMALL_TILE_SIZE - 2))
         self._create_mask()
 
     def redraw(self):

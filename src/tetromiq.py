@@ -1,5 +1,6 @@
-from pathlib import Path
+#from pathlib import Path
 from board import *
+from table import *
 
 
 def draw_centered_surface(screen, surface, y):
@@ -23,6 +24,18 @@ def game():
     draw_grid(background)
     # This makes blitting faster.
     background = background.convert()
+    # Username Input Box
+    username = ''
+    input_box = pygame.Rect(70, 230, 140, 32)
+    input_box_active = False
+    color_inactive = (0, 0, 255)
+    color_active = (0, 255, 0)
+    input_box_color = color_inactive
+    # High scores
+    show_high_scores = False
+    high_scores = []
+    high_score_table = []
+    read_high_score = open(Path("../resources/Scores.txt"), "r")
     
     font = pygame.font.SysFont(None, 30)
 
@@ -63,6 +76,26 @@ def game():
                 if event.key == pygame.K_p:
                     paused = not paused
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # If the user clicked on the input_box rect.
+                if input_box.collidepoint(event.pos):
+                    input_box_active = not input_box_active
+                else:
+                    input_box_active = False
+                # Change the current color of the input box.
+                input_box_color = color_active if input_box_active else color_inactive
+
+            if event.type == pygame.KEYDOWN and input_box_active:
+                if event.key == pygame.K_RETURN:
+                    # Save scores and prepare table
+                    prepare_score_table(read_high_score, high_scores, high_score_table, blocks.score, username)
+                    show_high_scores = True
+                elif event.key == pygame.K_BACKSPACE:
+                    username = username[:-1]
+                else:
+                    if len(username) < 20:
+                        username += event.unicode
+
             # Stop moving blocks if the game is over or paused.
             if game_over or paused:
                 continue
@@ -101,8 +134,31 @@ def game():
         lines_num_text = font.render(str(blocks.lines), True, (255, 255, 255), bgcolor)
         draw_centered_surface(screen, score_text, 370)
         draw_centered_surface(screen, lines_num_text, 450)
-        if game_over:
+
+        # Game Over, Enter Username, Display High Score Table
+        if game_over and not show_high_scores:
             draw_centered_surface(screen, game_over_text, 400)
+            # Draw the username input box.
+            enter_username_text = font.render("Enter Username", True, (255, 220, 0), bgcolor)
+            username_text = font.render(username, True, input_box_color)
+            draw_username_input_box(screen, enter_username_text, username_text, input_box, input_box_color)
+        elif game_over and show_high_scores:
+            # Draw Highscore Table
+            screen.fill(bgcolor)
+            table_username_head = font.render("Username", True, (255, 220, 0), bgcolor)
+            table_score_head = font.render("Score", True, (255, 220, 0), bgcolor)
+            draw_table_head(screen, table_username_head, table_score_head)
+            table_rank = 1
+            high_scores = list(dict.fromkeys(high_scores))
+            high_scores = sorted(high_scores, reverse=True)
+            for score_idx, score in enumerate(high_scores):
+                for place_idx, place_entry in enumerate(high_score_table):
+                    if score == place_entry[0]:
+                        place_entry_username = font.render(place_entry[1], True, (0, 0, 210), bgcolor)
+                        place_entry_score = font.render(str(place_entry[0]), True, (0, 0, 210), bgcolor)
+                        draw_table_entry(screen, place_entry_username, place_entry_score, table_rank)
+                        table_rank = table_rank + 1
+
         # Update.
         pygame.display.flip()
 

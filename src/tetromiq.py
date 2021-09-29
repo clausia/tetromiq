@@ -14,7 +14,7 @@ def game():
     paused = False
     game_over = False
     fall_speed = INITIAL_FALL_SPEED
-    speed_level = 1
+    previous_level = 1
     # Create background.
     background = pygame.Surface(screen.get_size())
     bgcolor = (0, 0, 0)
@@ -109,17 +109,36 @@ def game():
         if game_over:
             draw_centered_surface(screen, game_over_text, 570)
 
+        fall_speed, previous_level = update_fall_speed(
+            blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_BLOCK)
+
         # Update.
         pygame.display.flip()
 
-        # Increase falling speed
-        if blocks.score >= SCORE_CHANGE_SPEED_LEVEL * speed_level:
-            speed_level += 1
+        
+       
+    pygame.quit()
+
+
+def update_fall_speed(blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_BLOCK):
+    # change falling speed based on level
+    #if blocks.level >= LINES_CHANGE_SPEED_LEVEL * speed_level:
+        
+    
+    # Slow down every certain levels to allow higher scores
+    if blocks.level > previous_level:
+        previous_level = blocks.level
+        if blocks.level % LEVELS_TO_SLOW_DOWN == 0:
+            fall_speed = RESET_FALL_SPEED
+            pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, 0)
+            pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
+        else:
             fall_speed = fall_speed - (FALL_SPEED_DECREMENT if fall_speed > MIN_FALL_SPEED else 0)
             pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, 0)
             pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
 
-    pygame.quit()
+    
+    return fall_speed, previous_level
 
 
 if __name__ == "__main__":

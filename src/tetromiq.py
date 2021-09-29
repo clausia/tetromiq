@@ -122,10 +122,6 @@ def game():
 
 def update_fall_speed(blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_BLOCK):
     # change falling speed based on level
-    #if blocks.level >= LINES_CHANGE_SPEED_LEVEL * speed_level:
-        
-    
-    # Slow down every certain levels to allow higher scores
     if blocks.level > previous_level:
         previous_level = blocks.level
         if blocks.level % LEVELS_TO_SLOW_DOWN == 0:

@@ -29,7 +29,7 @@ class Block(pygame.sprite.Sprite):
             self.struct = np.rot90(self.struct)
         self._draw()
 
-    def _draw(self, x=4, y=0):
+    def _draw(self, x=5, y=0):
         width = len(self.struct[0]) * TILE_SIZE
         height = len(self.struct) * TILE_SIZE
         small_width = len(self.struct[0]) * SMALL_TILE_SIZE

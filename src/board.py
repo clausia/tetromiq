@@ -36,6 +36,9 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 # Get the blocks affected by the line deletion and remove duplicates
                 affected_blocks = list(OrderedDict.fromkeys(self.grid[-1 - i]))
 
+                # Position in which the line was created
+                line_position_y = NUM_COLUMNS - 1 - i
+
                 for block, y_offset in affected_blocks:
                     # Remove the block tiles which belong to the completed line
                     block.struct = np.delete(block.struct, y_offset, 0)
@@ -50,18 +53,19 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                         # If the struct is empty then the block is gone
                         self.remove(block)
 
-                # Instead of checking which blocks need to be moved once a line was completed,
-                # just try to move all of them
+                # Only the blocks that are above the line should be moved down one position,
+                # as the line they were resting on has disappeared
                 for block in self:
-                    # Except the current block
+                    # Except the current block, since it's just falling
                     if block.current:
                         continue
-                    # Pull down each block until it reaches the bottom or collides with another block
-                    while True:
+                    if block.y <= line_position_y:
+                        # Pull down each block one position, validate if it reaches the bottom
+                        # or collides with another block
                         try:
                             block.move_down(self)
                         except BottomReached:
-                            break
+                            continue
 
                 self.update_grid()
                 # Since we've updated the grid, now the i counter is no longer valid, so call the
@@ -158,20 +162,19 @@ def draw_grid(background):
         pygame.draw.line(background, grid_color, (0, y), (GRID_WIDTH, y))
 
 
-def remove_empty_columns(arr, _x_offset=0, _keep_counting=True):
+def remove_empty_columns(block, _x_offset=0, _keep_counting=True):
     """
-    Remove empty columns from arr (i.e. those filled with zeros).
-    The return value is (new_arr, x_offset), where x_offset is how  much the x coordinate needs to be
+    Remove empty columns from 'block' (i.e. those filled with zeros).
+    The return value is (new_block, x_offset), where x_offset is how much the x coordinate needs to be
     increased in order to maintain the block's original position.
     """
-    for colid, col in enumerate(arr.T):
+    for colid, col in enumerate(block.T):
         if col.max() == 0:
             if _keep_counting:
                 _x_offset += 1
             # Remove the current column and try again
-            arr, _x_offset = remove_empty_columns(
-                np.delete(arr, colid, 1), _x_offset, _keep_counting)
+            block, _x_offset = remove_empty_columns(np.delete(block, colid, 1), _x_offset, _keep_counting)
             break
         else:
             _keep_counting = False
-    return arr, _x_offset
+    return block, _x_offset

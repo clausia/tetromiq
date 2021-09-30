@@ -13,7 +13,7 @@ class Block(pygame.sprite.Sprite):
         Check if the specified block collides with some other block in the group.
         """
         for other_block in group:
-            # Ignore the current block which will always collide with itself.
+            # Ignore the current block which will always collide with itself
             if block == other_block:
                 continue
             if pygame.sprite.collide_mask(block, other_block) is not None:
@@ -24,18 +24,19 @@ class Block(pygame.sprite.Sprite):
         super().__init__()
         self.current = True
         self.struct = np.array(self.struct)
-        # Initial random rotation and flip.
+        # Initial random rotation and flip
         if random.randint(0, 1):
             self.struct = np.rot90(self.struct)
         self._draw()
 
-    def _draw(self, x=4, y=0):
+    def _draw(self, x=5, y=0):
         width = len(self.struct[0]) * TILE_SIZE
         height = len(self.struct) * TILE_SIZE
         small_width = len(self.struct[0]) * SMALL_TILE_SIZE
         small_height = len(self.struct) * SMALL_TILE_SIZE
         self.image = pygame.surface.Surface([width, height])
         self.image.set_colorkey((0, 0, 0))
+        # Small image for upcoming blocks
         self.small_image = pygame.surface.Surface([small_width, small_height])
         self.small_image.set_colorkey((0, 0, 0))
         # Position and size
@@ -59,8 +60,7 @@ class Block(pygame.sprite.Sprite):
     def _create_mask(self):
         """
         Create the mask attribute from the main surface.
-        The mask is required to check collisions. This should be called
-        after the surface is created or update.
+        The mask is required to check collisions. This should be called after the surface is created or update.
         """
         self.mask = pygame.mask.from_surface(self.image)
 
@@ -91,36 +91,34 @@ class Block(pygame.sprite.Sprite):
 
     def move_left(self, group):
         self.x -= 1
-        # Check if we reached the left margin.
+        # Check if we reached the left margin
         if self.x < 0 or Block.collide(self, group):
             self.x += 1
 
     def move_right(self, group):
         self.x += 1
-        # Check if we reached the right margin or collided with another
-        # block.
+        # Check if we reached the right margin or collided with another block
         if self.rect.right > GRID_WIDTH or Block.collide(self, group):
-            # Rollback.
+            # Rollback
             self.x -= 1
 
     def move_down(self, group):
         self.y += 1
-        # Check if the block reached the bottom or collided with
-        # another one.
+        # Check if the block reached the bottom or collided with another one
         if self.rect.bottom > GRID_HEIGHT or Block.collide(self, group):
-            # Rollback to the previous position.
+            # Rollback to the previous position
             self.y -= 1
             self.current = False
             raise BottomReached
 
     def rotate(self, group):
         self.image = pygame.transform.rotate(self.image, 90)
-        # Once rotated we need to update the size and position.
+        # Once rotated we need to update the size and position
         self.rect.width = self.image.get_width()
         self.rect.height = self.image.get_height()
         self._create_mask()
-        # Check the new position doesn't exceed the limits or collide
-        # with other blocks and adjust it if necessary.
+        # Check the new position doesn't exceed the limits or collide with other blocks
+        # and adjust it if necessary
         while self.rect.right > GRID_WIDTH:
             self.x -= 1
         while self.rect.left < 0:
@@ -132,10 +130,6 @@ class Block(pygame.sprite.Sprite):
                 break
             self.y -= 1
         self.struct = np.rot90(self.struct)
-
-    def update(self):
-        if self.current:
-            self.move_down()
 
 
 class SquareBlock(Block):
@@ -198,4 +192,3 @@ class ZIBlock(Block):
         (0, 1),
     )
     color = (0, 81, 242)
-

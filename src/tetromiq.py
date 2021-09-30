@@ -14,8 +14,8 @@ def game():
     paused = False
     game_over = False
     fall_speed = INITIAL_FALL_SPEED
-    level = 1
-    # Create background
+    previous_level = 1
+    # Create background.
     background = pygame.Surface(screen.get_size())
     bgcolor = (0, 0, 0)
     background.fill(bgcolor)
@@ -30,9 +30,11 @@ def game():
     except OSError:
         # If the font file is not available, the default will be used
         pass
+
     next_block_text = font.render("Next:", True, (255, 255, 255), bgcolor)
     score_msg_text = font.render("Score:", True, (255, 255, 255), bgcolor)
     lines_msg_text = font.render("Lines:", True, (255, 255, 255), bgcolor)
+    level_msg_text = font.render("Level:", True, (255, 255, 255), bgcolor)
     game_over_text = font.render("Game Over", True, (255, 220, 0), bgcolor)
 
     # Event constants
@@ -91,23 +93,42 @@ def game():
         # Counters
         draw_centered_surface(screen, score_msg_text, 340)
         draw_centered_surface(screen, lines_msg_text, 420)
+        draw_centered_surface(screen, level_msg_text, 500)
         score_text = font.render(str(blocks.score), True, (255, 255, 255), bgcolor)
         lines_num_text = font.render(str(blocks.lines), True, (255, 255, 255), bgcolor)
+        level_text = font.render(str(blocks.level), True, (255, 255, 255), bgcolor)
         draw_centered_surface(screen, score_text, 370)
         draw_centered_surface(screen, lines_num_text, 450)
+        draw_centered_surface(screen, level_text, 530)
         if game_over:
-            draw_centered_surface(screen, game_over_text, 400)
-        # Update
+            draw_centered_surface(screen, game_over_text, 570)
+
+        fall_speed, previous_level = update_fall_speed(
+            blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_BLOCK)
+
+        # Update.
         pygame.display.flip()
 
-        # Increase falling speed
-        if blocks.score >= SCORE_CHANGE_LEVEL * level:
-            level += 1
+        
+       
+    pygame.quit()
+
+
+def update_fall_speed(blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_BLOCK):
+    # change falling speed based on level
+    if blocks.level > previous_level:
+        previous_level = blocks.level
+        if blocks.level % LEVELS_TO_SLOW_DOWN == 0:
+            fall_speed = RESET_FALL_SPEED
+            pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, 0)
+            pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
+        else:
             fall_speed = fall_speed - (FALL_SPEED_DECREMENT if fall_speed > MIN_FALL_SPEED else 0)
             pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, 0)
             pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
 
-    pygame.quit()
+    
+    return fall_speed, previous_level
 
 
 if __name__ == "__main__":

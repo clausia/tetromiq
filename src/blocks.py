@@ -1,3 +1,4 @@
+import copy
 import random
 import pygame
 import numpy as np
@@ -22,9 +23,10 @@ class Block(pygame.sprite.Sprite):
 
     def __init__(self):
         super().__init__()
+        self.superposed = None
         self.current = True
         self.struct = np.array(self.struct)
-        # Initial random rotation and flip
+        # Initial random rotation
         if random.randint(0, 1):
             self.struct = np.rot90(self.struct)
         self._draw()
@@ -137,7 +139,10 @@ class SquareBlock(Block):
         (1, 1),
         (1, 1)
     )
-    color = (92, 142, 38)
+    color_100 = (92, 142, 38)
+    color_50 = (146, 208, 80)
+    color_25 = (196, 229, 159)
+    color = color_100
 
 
 class TBlock(Block):
@@ -145,7 +150,10 @@ class TBlock(Block):
         (1, 1, 1),
         (0, 1, 0)
     )
-    color = (255, 51, 204)
+    color_100 = (255, 51, 204)
+    color_50 = (255, 139, 225)
+    color_25 = (255, 205, 242)
+    color = color_100
 
 
 class LineBlock(Block):
@@ -155,7 +163,10 @@ class LineBlock(Block):
         (1,),
         (1,)
     )
-    color = (0, 176, 240)
+    color_100 = (0, 176, 240)
+    color_50 = (101, 215, 255)
+    color_25 = (179, 235, 235)
+    color = color_100
 
 
 class LBlock(Block):
@@ -164,7 +175,10 @@ class LBlock(Block):
         (1, 0),
         (1, 0),
     )
-    color = (112, 48, 160)
+    color_100 = (112, 48, 160)
+    color_50 = (165, 104, 210)
+    color_25 = (205, 172, 230)
+    color = color_100
 
 
 class LIBlock(Block):
@@ -173,7 +187,10 @@ class LIBlock(Block):
         (0, 1),
         (0, 1),
     )
-    color = (238, 138, 18)
+    color_100 = (238, 138, 18)
+    color_50 = (245, 186, 115)
+    color_25 = (250, 222, 188)
+    color = color_100
 
 
 class ZBlock(Block):
@@ -182,7 +199,10 @@ class ZBlock(Block):
         (1, 1),
         (1, 0),
     )
-    color = (172, 0, 0)
+    color_100 = (172, 0, 0)
+    color_50 = (255, 0, 0)
+    color_25 = (255, 113, 113)
+    color = color_100
 
 
 class ZIBlock(Block):
@@ -191,4 +211,48 @@ class ZIBlock(Block):
         (1, 1),
         (0, 1),
     )
-    color = (0, 81, 242)
+    color_100 = (0, 81, 242)
+    color_50 = (91, 146, 255)
+    color_25 = (171, 199, 255)
+    color = color_100
+
+
+class QuantumBlock:
+    """
+    It stores a superposed block, and keeps the record of the blocks that were generated from
+    the original (which was at 100%), it can save up to 4 sub-blocks, the possible configurations are:
+       [ block at 50% , block at 50%, None,         None ]
+       [ block at 50% , block at 25%, block at 25%, None ]
+       [ block at 25% , block at 25%, block at 25%, block at 25% ]
+    """
+
+    types_blocks = {
+        'SquareBlock': SquareBlock,
+        'TBlock': TBlock,
+        'LineBlock': LineBlock,
+        'LBlock': LBlock,
+        'LIBlock': LIBlock,
+        'ZBlock': ZBlock,
+        'ZIBlock': ZIBlock
+    }
+
+    def __init__(self, original_block):
+        # When a set of superposed blocks is created for the first time, we will always be in the
+        # case of having two parts, with 50%/50%
+
+        block_1 = QuantumBlock.types_blocks[type(original_block).__name__]()
+        block_1.color = block_1.color_50
+        block_1.y = original_block.y
+        # TODO: validar los borders laterales para las posiciones en x
+        block_1.x = original_block.x - len(original_block.struct[0])
+        block_1.superposed = self
+        block_1.redraw()
+
+        block_2 = QuantumBlock.types_blocks[type(original_block).__name__]()
+        block_2.color = block_2.color_50
+        block_2.y = original_block.y
+        block_2.x = original_block.x + len(original_block.struct[0])
+        block_2.superposed = self
+        block_2.redraw()
+
+        self.set_blocks = [block_1, block_2, None, None]

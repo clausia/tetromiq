@@ -55,6 +55,8 @@ def game():
                         blocks.stop_moving_current_block()
                     elif event.key == pygame.K_UP:
                         blocks.rotate_current_block()
+                    elif event.key == pygame.K_h:
+                        blocks.split_current_block()
                 if event.key == pygame.K_p:
                     paused = not paused
 

@@ -146,6 +146,19 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self.current_block.rotate(self)
             self.update_grid()
 
+    def split_current_block(self):
+        # Superposed current block
+        if self.current_block.superposed is None:
+            # If the block does not yet belong to a set of superposed blocks
+            superposed_set = QuantumBlock(self.current_block)
+            self.remove(self.current_block)
+        else:
+            pass
+        for sub_block in superposed_set.set_blocks:
+            if sub_block is not None:
+                self.add(sub_block)
+        self.update_grid()
+
 
 def draw_grid(background):
     """

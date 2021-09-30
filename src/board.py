@@ -8,14 +8,15 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
 
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
+        self._current_block_movement_heading = None
         self._reset_grid()
         self._ignore_next_stop = False
         self.score = 0
         self.lines = 0
         self.next_blocks = []
-        # Not really moving, just to initialize the attribute.
+        # Not really moving, just to initialize the attribute
         self.stop_moving_current_block()
-        # The first block.
+        # The first block to play with
         self._create_new_block()
 
     def _get_random_block(self):
@@ -25,46 +26,37 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
 
     def _check_line_completion(self):
         """
-        Check each line of the grid and remove the ones that
-        are complete.
+        Check each line of the grid and remove the ones that are complete.
         """
-        # Start checking from the bottom.
+        # Start checking from the bottom
         for i, row in enumerate(self.grid[::-1]):
             if all(row):
                 self.score += 5
                 self.lines += 1
-                # Get the blocks affected by the line deletion and
-                # remove duplicates.
-                affected_blocks = list(
-                    OrderedDict.fromkeys(self.grid[-1 - i]))
+                # Get the blocks affected by the line deletion and remove duplicates
+                affected_blocks = list(OrderedDict.fromkeys(self.grid[-1 - i]))
 
                 for block, y_offset in affected_blocks:
-                    # Remove the block tiles which belong to the
-                    # completed line.
+                    # Remove the block tiles which belong to the completed line
                     block.struct = np.delete(block.struct, y_offset, 0)
                     if block.struct.any():
-                        # Once removed, check if we have empty columns
-                        # since they need to be dropped.
-                        block.struct, x_offset = \
-                            remove_empty_columns(block.struct)
-                        # Compensate the space gone with the columns to
-                        # keep the block's original position.
+                        # Once removed, check if we have empty columns since they need to be dropped
+                        block.struct, x_offset = remove_empty_columns(block.struct)
+                        # Compensate the space gone with the columns to keep the block's original position
                         block.x += x_offset
-                        # Force update.
+                        # Force redraw
                         block.redraw()
                     else:
-                        # If the struct is empty then the block is gone.
+                        # If the struct is empty then the block is gone
                         self.remove(block)
 
-                # Instead of checking which blocks need to be moved
-                # once a line was completed, just try to move all of
-                # them.
+                # Instead of checking which blocks need to be moved once a line was completed,
+                # just try to move all of them
                 for block in self:
-                    # Except the current block.
+                    # Except the current block
                     if block.current:
                         continue
-                    # Pull down each block until it reaches the
-                    # bottom or collides with another block.
+                    # Pull down each block until it reaches the bottom or collides with another block
                     while True:
                         try:
                             block.move_down(self)
@@ -72,10 +64,8 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                             break
 
                 self.update_grid()
-                # Since we've updated the grid, now the i counter
-                # is no longer valid, so call the function again
-                # to check if there're other completed lines in the
-                # new grid.
+                # Since we've updated the grid, now the i counter is no longer valid, so call the
+                # function again to check if there are other completed lines in the new grid
                 self._check_line_completion()
                 break
 
@@ -97,7 +87,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         for block in self:
             for y_offset, row in enumerate(block.struct):
                 for x_offset, digit in enumerate(row):
-                    # Prevent replacing previous blocks.
+                    # Prevent replacing previous blocks
                     if digit == 0:
                         continue
                     rowid = block.y + y_offset
@@ -118,7 +108,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self.update_grid()
 
     def move_current_block(self):
-        # First check if there's something to move.
+        # First check if there's something to move
         if self._current_block_movement_heading is None:
             return
         action = {
@@ -127,8 +117,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             pygame.K_RIGHT: self.current_block.move_right
         }
         try:
-            # Each function requires the group as the first argument
-            # to check any possible collision.
+            # Each function requires the group as the first argument to check any possible collision
             action[self._current_block_movement_heading](self)
         except BottomReached:
             self.stop_moving_current_block()
@@ -148,38 +137,38 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self._current_block_movement_heading = None
 
     def rotate_current_block(self):
-        # Prevent SquareBlocks rotation.
+        # Prevent SquareBlocks rotation
         if not isinstance(self.current_block, SquareBlock):
             self.current_block.rotate(self)
             self.update_grid()
 
 
 def draw_grid(background):
-    """Draw the background grid."""
+    """
+    Draw the background grid.
+    """
     grid_color = 50, 50, 50
-    # Vertical lines.
+    # Vertical lines
     for i in range(NUM_ROWS + 1):
         x = TILE_SIZE * i
-        pygame.draw.line(background, grid_color,
-                         (x, 0), (x, GRID_HEIGHT))
-    # Horizontal lines.
+        pygame.draw.line(background, grid_color, (x, 0), (x, GRID_HEIGHT))
+    # Horizontal lines
     for i in range(NUM_COLUMNS + 1):
         y = TILE_SIZE * i
-        pygame.draw.line(background, grid_color,
-                         (0, y), (GRID_WIDTH, y))
+        pygame.draw.line(background, grid_color, (0, y), (GRID_WIDTH, y))
 
 
 def remove_empty_columns(arr, _x_offset=0, _keep_counting=True):
     """
     Remove empty columns from arr (i.e. those filled with zeros).
-    The return value is (new_arr, x_offset), where x_offset is how  much the x coordinate needs to be increased in
-    order to maintain the block's original position.
+    The return value is (new_arr, x_offset), where x_offset is how  much the x coordinate needs to be
+    increased in order to maintain the block's original position.
     """
     for colid, col in enumerate(arr.T):
         if col.max() == 0:
             if _keep_counting:
                 _x_offset += 1
-            # Remove the current column and try again.
+            # Remove the current column and try again
             arr, _x_offset = remove_empty_columns(
                 np.delete(arr, colid, 1), _x_offset, _keep_counting)
             break

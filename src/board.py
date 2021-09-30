@@ -37,7 +37,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 affected_blocks = list(OrderedDict.fromkeys(self.grid[-1 - i]))
 
                 # Position in which the line was created
-                line_position_y = NUM_COLUMNS - 1 - i
+                line_position_y = NUM_ROWS - 1 - i
 
                 for block, y_offset in affected_blocks:
                     # Remove the block tiles which belong to the completed line
@@ -74,7 +74,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 break
 
     def _reset_grid(self):
-        self.grid = [[0 for _ in range(NUM_ROWS)] for _ in range(NUM_COLUMNS)]
+        self.grid = [[0 for _ in range(NUM_COLUMNS)] for _ in range(NUM_ROWS)]
 
     def _create_new_block(self):
         self._get_random_block()
@@ -153,11 +153,11 @@ def draw_grid(background):
     """
     grid_color = 50, 50, 50
     # Vertical lines
-    for i in range(NUM_ROWS + 1):
+    for i in range(NUM_COLUMNS + 1):
         x = TILE_SIZE * i
         pygame.draw.line(background, grid_color, (x, 0), (x, GRID_HEIGHT))
     # Horizontal lines
-    for i in range(NUM_COLUMNS + 1):
+    for i in range(NUM_ROWS + 1):
         y = TILE_SIZE * i
         pygame.draw.line(background, grid_color, (0, y), (GRID_WIDTH, y))
 

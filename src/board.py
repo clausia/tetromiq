@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from blocks import *
+from quantum_block import *
 import numpy as np
 import pygame
 

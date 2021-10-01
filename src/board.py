@@ -13,6 +13,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         self._ignore_next_stop = False
         self.score = 0
         self.lines = 0
+        self.level = 1
         self.next_blocks = []
         # Not really moving, just to initialize the attribute
         self.stop_moving_current_block()
@@ -33,6 +34,11 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             if all(row):
                 self.score += 5
                 self.lines += 1
+                
+                # Check if level changed
+                if self.lines >= LINES_TO_CHANGE_LEVEL * self.level:
+                    self.level += 1
+        
                 # Get the blocks affected by the line deletion and remove duplicates
                 affected_blocks = list(OrderedDict.fromkeys(self.grid[-1 - i]))
 

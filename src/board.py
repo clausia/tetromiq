@@ -108,12 +108,23 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
     def current_block(self):
         return self.sprites()[-1]
 
+    # TODO: seprar esta funcion en los dos casos, cuantico o normal (para no hacer tantas veces la pregunta
     def update_current_block(self):
         try:
-            self.current_block.move_down(self)
+            if self.current_block.superposed is None:  # Normal behavior of a block
+                self.current_block.move_down(self)
+            else:                                      # Superposed block behavior
+                # Move down all superposed blocks
+                for block in self.current_block.superposed.set_blocks:
+                    if block is not None:
+                        block.move_down(self)
         except BottomReached:
-            self.stop_moving_current_block()
-            self._create_new_block()
+            if self.current_block.superposed is None:  # Normal behavior of a block
+                self.stop_moving_current_block()
+                self._create_new_block()
+            else:                                      # Superposed block behavior
+                self._bottom_reach_superposed_block()
+
         else:
             self.update_grid()
 
@@ -130,8 +141,11 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             # Each function requires the group as the first argument to check any possible collision
             action[self._current_block_movement_heading](self)
         except BottomReached:
-            self.stop_moving_current_block()
-            self._create_new_block()
+            if self.current_block.superposed is None:  # Normal behavior of a block
+                self.stop_moving_current_block()
+                self._create_new_block()
+            else:
+                self._bottom_reach_superposed_block()
         else:
             self.update_grid()
 
@@ -159,7 +173,6 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             curr = self.current_block
             self.remove(self.current_block)
             superposed_set = QuantumBlock(curr, self)
-
         else:
             superposed_set = self.current_block.superposed
 
@@ -167,6 +180,43 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             if sub_block is not None:
                 self.add(sub_block)
         self.update_grid()
+
+    def exchange_superposed_blocks(self):
+        if self.current_block.superposed is not None:
+            # TODO: verificar si hay mas de dos bloques super puestos, el TAB debe moverse entre todos, en orden
+            self._swap_block_with_top(2)
+
+    def _swap_block_with_top(self, pos_block):
+        try:
+            top_block = self.sprites()[-1]
+            swap_block = self.sprites()[-pos_block]
+            top_block.current = False
+            swap_block.current = True
+            self.remove(top_block)
+            self.remove(swap_block)
+            self.add(top_block)
+            self.add(swap_block)
+        except IndexError:
+            # both blocks have already reached the bottom, so the swap no longer makes sense
+            pass
+
+    def _bottom_reach_superposed_block(self):
+        self.current_block.bottom_reach = True
+        # Current block has reached the bottom, check if any of its superpositions
+        # has not reaching the bottom yet
+        at_least_one = False
+        for block in self.current_block.superposed.set_blocks:
+            if block is not None:
+                if not block.bottom_reach:
+                    block.current = True
+                    pos_block_in_sprites = len(self.sprites()) - self.sprites().index(block)
+                    self._swap_block_with_top(pos_block_in_sprites)
+                    at_least_one = True
+                    break
+        # TODO: no es cierto esto, o si? cuando llega uno de los dos superpuestos, se detienen el que falta por llegar despues de avanzar un cuadro solamente
+        if not at_least_one:
+            self.stop_moving_current_block()
+            self._create_new_block()
 
 
 def draw_grid(background):

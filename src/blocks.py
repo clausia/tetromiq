@@ -216,7 +216,7 @@ class ZIBlock(Block):
     color_25 = (171, 199, 255)
     color = color_100
 
-
+# TODO: poner este codigo en un archivo separado
 class QuantumBlock:
     """
     It stores a superposed block, and keeps the record of the blocks that were generated from
@@ -240,41 +240,48 @@ class QuantumBlock:
         # When a set of superposed blocks is created for the first time, we will always be in the
         # case of having two parts, with 50%/50%
 
-        block_1 = self._create_superposed_block(self, original_block)          # tile left
-        block_2 = self._create_superposed_block(self, original_block, False)   # tile right
+        block_left = self._create_superposed_block(self, original_block)          # tile left
+        block_right = self._create_superposed_block(self, original_block, False)  # tile right
+
+        block_right.current = True
 
         # Check that the positions doesn't exceed the limits or collide with other blocks
         # and adjust it if necessary
-        while block_2.rect.right > GRID_WIDTH:
-            block_1.x -= 1
-            block_2.x -= 1
-        while block_1.rect.left < 0:
-            block_1.x += 1
-            block_2.x += 1
-        while block_1.rect.bottom > GRID_HEIGHT:
-            block_1.y -= 1
-        while block_2.rect.bottom > GRID_HEIGHT:
-            block_2.y -= 1
+        while block_right.rect.right > GRID_WIDTH:
+            block_left.x -= 1
+            block_right.x -= 1
+        while block_left.rect.left < 0:
+            block_left.x += 1
+            block_right.x += 1
+        while block_left.rect.bottom > GRID_HEIGHT:
+            block_left.y -= 1
+        while block_right.rect.bottom > GRID_HEIGHT:
+            block_right.y -= 1
         while True:
-            if not Block.collide(block_1, group):
+            if not Block.collide(block_left, group):
                 break
-            block_1.y -= 1
+            block_left.y -= 1
         while True:
-            if not Block.collide(block_2, group):
+            if not Block.collide(block_right, group):
                 break
-            block_2.y -= 1
+            block_right.y -= 1
 
-        self.set_blocks = [block_1, block_2, None, None]
+        # The blocks are added in the order of creation, that is, in the sprite list,
+        # the last block created is up to the "top"
+        self.set_blocks = [block_left, block_right, None, None]
+        #self.bottom_reach = [False, False, True, True]
 
     @staticmethod
-    def _create_superposed_block(qm, original_block, left=True):
+    def _create_superposed_block(qb, original_block, left=True):
         block = QuantumBlock.types_blocks[type(original_block).__name__]()
         block.color = block.color_50
         block.struct = original_block.struct
+        block.current = False
         block.y = original_block.y
         width_block = len(original_block.struct[0])
         block.x = original_block.x + int(width_block / 2) + (-width_block if left else 1)
-        block.superposed = qm
+        block.superposed = qb
+        block.bottom_reach = False
         block.redraw()
 
         return block

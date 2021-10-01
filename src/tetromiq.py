@@ -23,6 +23,9 @@ def game():
     draw_grid(background)
     # This makes blitting faster
     background = background.convert()
+
+    bg_music = pygame.mixer.Sound(Path('../resources/music.mp3'))
+    bg_music.play(loops=-1)
     
     font = pygame.font.SysFont(None, 30)
     try:
@@ -59,6 +62,10 @@ def game():
                         blocks.rotate_current_block()
                 if event.key == pygame.K_p:
                     paused = not paused
+                    if paused:
+                        pygame.mixer.pause()
+                    else:
+                        pygame.mixer.unpause()
 
             # Stop moving blocks if the game is over or paused
             if game_over or paused:

@@ -2,6 +2,7 @@ from collections import OrderedDict
 from blocks import *
 import numpy as np
 import pygame
+from pathlib import Path
 
 
 class BlocksGroup(pygame.sprite.OrderedUpdates):
@@ -19,6 +20,12 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         self.stop_moving_current_block()
         # The first block to play with
         self._create_new_block()
+        self.line_created_sound = pygame.mixer.Sound(Path('../resources/line-created.wav'))
+        self.piece_moved_sound = pygame.mixer.Sound(Path('../resources/piece-moved.wav'))
+        self.piece_moved_sound.set_volume(0.1)
+        self.piece_rotated_sound = pygame.mixer.Sound(Path('../resources/piece-rotated.wav'))
+        self.level_up_sound = pygame.mixer.Sound(Path('../resources/level-up.wav'))
+        self.level_up_sound.set_volume(1)
 
     def _get_random_block(self):
         while len(self.next_blocks) < PREVIEW_BLOCKS:
@@ -34,10 +41,12 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             if all(row):
                 self.score += 5
                 self.lines += 1
+                self.line_created_sound.play()
                 
                 # Check if level changed
                 if self.lines >= LINES_TO_CHANGE_LEVEL * self.level:
                     self.level += 1
+                    self.level_up_sound.play(2)
         
                 # Get the blocks affected by the line deletion and remove duplicates
                 affected_blocks = list(OrderedDict.fromkeys(self.grid[-1 - i]))
@@ -134,6 +143,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self._create_new_block()
         else:
             self.update_grid()
+            self.piece_moved_sound.play()
 
     def start_moving_current_block(self, key):
         if self._current_block_movement_heading is not None:
@@ -151,7 +161,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         if not isinstance(self.current_block, SquareBlock):
             self.current_block.rotate(self)
             self.update_grid()
-
+            self.piece_rotated_sound.play()
 
 def draw_grid(background):
     """

@@ -108,25 +108,26 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
     def current_block(self):
         return self.sprites()[-1]
 
-    # TODO: seprar esta funcion en los dos casos, cuantico o normal (para no hacer tantas veces la pregunta
     def update_current_block(self):
-        try:
-            if self.current_block.superposed is None:  # Normal behavior of a block
+        if self.current_block.superposed is None:  # Normal behavior of a block
+            try:
                 self.current_block.move_down(self)
-            else:                                      # Superposed block behavior
-                # Move down all superposed blocks
-                for block in self.current_block.superposed.set_blocks:
-                    if block is not None:
-                        block.move_down(self)
-        except BottomReached:
-            if self.current_block.superposed is None:  # Normal behavior of a block
+            except BottomReached:
                 self.stop_moving_current_block()
                 self._create_new_block()
-            else:                                      # Superposed block behavior
-                self._bottom_reach_superposed_block()
+            else:
+                self.update_grid()
+        else:                                      # Superposed block behavior
+            self.update_current_block_quantum()
 
-        else:
-            self.update_grid()
+    def update_current_block_quantum(self):
+        try:
+            # Move down all superposed blocks
+            for block in self.current_block.superposed.set_blocks:
+                if block is not None:
+                    block.move_down(self)
+        except BottomReached:
+            self._bottom_reach_superposed_block()
 
     def move_current_block(self):
         # First check if there's something to move

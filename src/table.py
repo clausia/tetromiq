@@ -19,7 +19,7 @@ class ScoreTable:
         self.show_high_scores = False
         self.high_scores = []
         self.high_score_table = []
-        self.read_high_score = open(Path("../resources/Scores.txt"), "r")
+        self.read_high_score = open(Path("../resources/scores.txt"), "r")
 
     def prepare_score_table(self, blocks_score):
         for score_entry in self.read_high_score:
@@ -39,7 +39,7 @@ class ScoreTable:
         if len(self.high_score_table) < 10:
             self.high_score_table.append([blocks_score, self.username])
             self.high_scores.append(blocks_score)
-        write_high_score = open(Path("../resources/Scores.txt"), "w")
+        write_high_score = open(Path("../resources/scores.txt"), "w")
         line_content = ''
         for place_entry in self.high_score_table:
             line_content += str(place_entry[0]) + "=" + place_entry[1] + '\n'
@@ -127,6 +127,6 @@ def draw_table_head(screen, table_rank_head, table_username_head, table_score_he
 
 
 def draw_table_entry(screen, place_entry_rank, place_entry_username, place_entry_score, place_idx):
-    screen.blit(place_entry_rank, (int(GRID_WIDTH / 6.7), int((GRID_HEIGHT / 7) + 1.5 * place_idx * TILE_SIZE)))
+    screen.blit(place_entry_rank, (int(GRID_WIDTH / 5.5), int((GRID_HEIGHT / 7) + 1.5 * place_idx * TILE_SIZE)))
     screen.blit(place_entry_username, (int(GRID_WIDTH / 2), int((GRID_HEIGHT / 7) + 1.5 * place_idx * TILE_SIZE)))
-    screen.blit(place_entry_score, (int(GRID_WIDTH / 0.75), int((GRID_HEIGHT / 7) + 1.5 * place_idx * TILE_SIZE)))
+    screen.blit(place_entry_score, (int(GRID_WIDTH / 0.73), int((GRID_HEIGHT / 7) + 1.5 * place_idx * TILE_SIZE)))

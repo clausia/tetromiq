@@ -156,10 +156,13 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         # Superposed current block
         if self.current_block.superposed is None:
             # If the block does not yet belong to a set of superposed blocks
-            superposed_set = QuantumBlock(self.current_block)
+            curr = self.current_block
             self.remove(self.current_block)
+            superposed_set = QuantumBlock(curr, self)
+
         else:
-            pass
+            superposed_set = self.current_block.superposed
+
         for sub_block in superposed_set.set_blocks:
             if sub_block is not None:
                 self.add(sub_block)

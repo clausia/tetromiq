@@ -236,23 +236,45 @@ class QuantumBlock:
         'ZIBlock': ZIBlock
     }
 
-    def __init__(self, original_block):
+    def __init__(self, original_block, group):
         # When a set of superposed blocks is created for the first time, we will always be in the
         # case of having two parts, with 50%/50%
 
-        block_1 = QuantumBlock.types_blocks[type(original_block).__name__]()
-        block_1.color = block_1.color_50
-        block_1.y = original_block.y
-        # TODO: validar los borders laterales para las posiciones en x
-        block_1.x = original_block.x - len(original_block.struct[0])
-        block_1.superposed = self
-        block_1.redraw()
+        block_1 = self._create_superposed_block(self, original_block)          # tile left
+        block_2 = self._create_superposed_block(self, original_block, False)   # tile right
 
-        block_2 = QuantumBlock.types_blocks[type(original_block).__name__]()
-        block_2.color = block_2.color_50
-        block_2.y = original_block.y
-        block_2.x = original_block.x + len(original_block.struct[0])
-        block_2.superposed = self
-        block_2.redraw()
+        # Check that the positions doesn't exceed the limits or collide with other blocks
+        # and adjust it if necessary
+        while block_2.rect.right > GRID_WIDTH:
+            block_1.x -= 1
+            block_2.x -= 1
+        while block_1.rect.left < 0:
+            block_1.x += 1
+            block_2.x += 1
+        while block_1.rect.bottom > GRID_HEIGHT:
+            block_1.y -= 1
+        while block_2.rect.bottom > GRID_HEIGHT:
+            block_2.y -= 1
+        while True:
+            if not Block.collide(block_1, group):
+                break
+            block_1.y -= 1
+        while True:
+            if not Block.collide(block_2, group):
+                break
+            block_2.y -= 1
 
         self.set_blocks = [block_1, block_2, None, None]
+
+    @staticmethod
+    def _create_superposed_block(qm, original_block, left=True):
+        block = QuantumBlock.types_blocks[type(original_block).__name__]()
+        block.color = block.color_50
+        block.struct = original_block.struct
+        block.y = original_block.y
+        width_block = len(original_block.struct[0])
+        block.x = original_block.x + int(width_block / 2) + (-width_block if left else 1)
+        block.superposed = qm
+        block.redraw()
+
+        return block

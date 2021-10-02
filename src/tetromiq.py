@@ -1,5 +1,6 @@
 from pathlib import Path
 from board import *
+from table import *
 
 
 def draw_centered_surface(screen, surface, y):
@@ -47,6 +48,7 @@ def game():
     pygame.time.set_timer(EVENT_MOVE_CURRENT_BLOCK, 100)
 
     blocks = BlocksGroup()
+    score_table = ScoreTable()
 
     while run:
         for event in pygame.event.get():
@@ -59,8 +61,16 @@ def game():
                         blocks.stop_moving_current_block()
                     elif event.key == pygame.K_UP:
                         blocks.rotate_current_block()
-                if event.key == pygame.K_p:
+                    elif event.key == pygame.K_h:
+                        blocks.split_current_block()
+                    elif event.key == pygame.K_TAB:
+                        blocks.exchange_superposed_blocks()
+                if event.key == pygame.K_p and not game_over:
                     paused = not paused
+                if game_over:
+                    score_table.type_input_in_box(event, blocks.score)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                score_table.activate_input_box(event.pos)
 
             # Stop moving blocks if the game is over or paused
             if game_over or paused:
@@ -104,6 +114,8 @@ def game():
         draw_centered_surface(screen, level_text, 530)
         if game_over:
             draw_centered_surface(screen, game_over_text, 570)
+            # Draw input box or high score table
+            score_table.draw_input_or_table(screen, font, bgcolor)
         
         # Bottom
         draw_bottom(screen, background, bgcolor, fontSymbols)

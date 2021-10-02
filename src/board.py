@@ -34,10 +34,9 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         for i, row in enumerate(self.grid[::-1]):
             if all(row):
 
-                # Check first if there is any quantum block involved in the creation of the line,
-                # because when collapsing it could be that the line is no longer created anymore
-                if self.current_block.quantum_block is not None:
-                    collapsed_block = collapse(self.current_block.quantum_block)
+                if self._verify_if_quantum_block_involved(row, i):
+                    self._check_line_completion()
+                    break
 
                 self.score += 5
                 self.lines += 1
@@ -48,9 +47,6 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         
                 # Get the blocks affected by the line deletion and remove duplicates
                 affected_blocks = list(OrderedDict.fromkeys(self.grid[-1 - i]))
-
-                # Position in which the line was created
-                line_position_y = NUM_ROWS - 1 - i
 
                 for block, y_offset in affected_blocks:
                     # Remove the block tiles which belong to the completed line
@@ -65,6 +61,9 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                     else:
                         # If the struct is empty then the block is gone
                         self.remove(block)
+
+                # Position in which the line was created
+                line_position_y = NUM_ROWS - 1 - i
 
                 # Only the blocks that are above the line should be moved down one position,
                 # as the line they were resting on has disappeared
@@ -85,6 +84,41 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 # function again to check if there are other completed lines in the new grid
                 self._check_line_completion()
                 break
+
+    def _verify_if_quantum_block_involved(self, row, i):
+        # Check first if there is any quantum block involved in the creation of the line,
+        # because when collapsing it could be that the line is no longer created anymore
+        collapsed = False
+        for square in row:
+            if square != 0 and square[0].quantum_block is not None:
+                # The square belongs to a quantum block
+                collapsed_block = collapse(square[0].quantum_block)
+
+                for sub_block in square[0].quantum_block.set_blocks:
+                    if sub_block is not None and sub_block != collapsed_block:
+                        sub_block.quantum_block = None
+                        self.remove(sub_block)
+
+                self.update_grid()
+                self._move_down_blocks_above()
+
+                collapsed_block.color = collapsed_block.color_100
+                collapsed_block.redraw()
+                collapsed_block.quantum_block = None
+
+                collapsed = True
+        return collapsed
+
+    def _move_down_blocks_above(self):
+        for block in self:
+            if block.current:
+                continue
+            while True:
+                try:
+                    block.move_down(self)
+                except BottomReached:
+                    break
+        self.update_grid()
 
     def _reset_grid(self):
         self.grid = [[0 for _ in range(NUM_COLUMNS)] for _ in range(NUM_ROWS)]

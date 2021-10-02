@@ -27,6 +27,9 @@ class QuantumBlock:
         block_left = self._create_superposed_block(self, original_block, group)          # tile left
         block_right = self._create_superposed_block(self, original_block, group, False)  # tile right
 
+        block_left.is_50 = True
+        block_right.is_50 = True
+
         block_right.current = True
 
         self._fit_inside_board(block_left, block_right, group)
@@ -77,6 +80,9 @@ class QuantumBlock:
     def split_fifty_into_two(self, original_block, group):
         block_left = self._create_superposed_block(self, original_block, group, color='color_25')          # tile left
         block_right = self._create_superposed_block(self, original_block, group, False, color='color_25')  # tile right
+
+        block_left.is_50 = False
+        block_right.is_50 = False
 
         self._fit_inside_board(block_left, block_right, group)
 

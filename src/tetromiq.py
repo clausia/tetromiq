@@ -10,11 +10,9 @@ def draw_centered_surface(screen, surface, y):
 
 def game():
     pygame.init()
-
-    play_intro()
-
     pygame.display.set_caption("TetromiQ")
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    play_intro(screen)
     run = True
     paused = False
     game_over = False
@@ -128,12 +126,12 @@ def game():
     pygame.quit()
 
 
-def play_intro():
+def play_intro(window):
     video = cv2.VideoCapture("../resources/intro.mp4")
     success, video_image = video.read()
     fps = video.get(cv2.CAP_PROP_FPS)
 
-    window = pygame.display.set_mode(video_image.shape[1::-1])
+    #window = pygame.display.set_mode(video_image.shape[1::-1])
     clock = pygame.time.Clock()
 
     run = success
@@ -145,11 +143,10 @@ def play_intro():
 
         success, video_image = video.read()
         if success:
-            video_surf = pygame.image.frombuffer(
-                video_image.tobytes(), video_image.shape[1::-1], "BGR")
+            video_surf = pygame.image.frombuffer(video_image.tobytes(), video_image.shape[1::-1], "BGR")
         else:
             run = False
-        window.blit(video_surf, (0, 0))
+        window.blit(video_surf, (-163, -240))
         pygame.display.flip()
 
 

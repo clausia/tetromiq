@@ -25,8 +25,10 @@ def game():
     background = background.convert()
     
     font = pygame.font.SysFont(None, 30)
+    fontSymbols = pygame.font.SysFont(None, 30)
     try:
         font = pygame.font.Font(Path("../resources/Roboto-Regular.ttf"), 20)
+        fontSymbols = pygame.font.Font(Path("../resources/seguisym.ttf"), 20)
     except OSError:
         # If the font file is not available, the default will be used
         pass
@@ -102,6 +104,9 @@ def game():
         draw_centered_surface(screen, level_text, 530)
         if game_over:
             draw_centered_surface(screen, game_over_text, 570)
+        
+        # Bottom
+        draw_bottom(screen, background, bgcolor, fontSymbols)
 
         fall_speed, previous_level = update_fall_speed(
             blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_BLOCK)
@@ -109,7 +114,6 @@ def game():
         # Update.
         pygame.display.flip()
 
-        
        
     pygame.quit()
 
@@ -127,9 +131,15 @@ def update_fall_speed(blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_B
             pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, 0)
             pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
 
-    
     return fall_speed, previous_level
 
+def draw_bottom(screen, background, bgcolor, fontSymbols):
+    pygame.draw.line(background, (50, 50, 50), (0, GRID_HEIGHT), (WINDOW_WIDTH, GRID_HEIGHT))
+    
+    # "ᐊ ᐁ ᐅ Move  ᐃ Rotate  [H] Hadamard  ⇆ Swap  [P] Pause"
+    text = "\u25C0 \u25BC \u25B6 Move  \u25B2 Rotate  [H] Hadamard  \u21B9 Swap  [P] Pause"
+    bottom_msg_text = fontSymbols.render(text, True, (255, 255, 255), bgcolor)
+    screen.blit(bottom_msg_text, ((WINDOW_WIDTH - bottom_msg_text.get_width()) / 2, GRID_HEIGHT + 10))
 
 if __name__ == "__main__":
     game()

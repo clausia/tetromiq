@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from blocks import *
+from quantum_block import *
 import numpy as np
 import pygame
 
@@ -85,10 +85,10 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
     def _create_new_block(self):
         self._get_random_block()
         new_block = self.next_blocks.pop(0)
-        if Block.collide(new_block, self):
-            raise TopReached
         self.add(new_block)
         self.update_grid()
+        if Block.collide(new_block, self):
+            raise TopReached
         self._check_line_completion()
         self._get_random_block()
 
@@ -109,13 +109,27 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         return self.sprites()[-1]
 
     def update_current_block(self):
-        try:
-            self.current_block.move_down(self)
-        except BottomReached:
-            self.stop_moving_current_block()
-            self._create_new_block()
-        else:
-            self.update_grid()
+        if self.current_block.quantum_block is None:  # Normal behavior of a block
+            try:
+                self.current_block.move_down(self)
+            except BottomReached:
+                self.stop_moving_current_block()
+                self._create_new_block()
+            else:
+                self.update_grid()
+        else:                                      # Superposed block behavior
+            self._update_current_block_quantum()
+
+    def _update_current_block_quantum(self):
+        # Move down all superposed blocks
+        for block in self.current_block.quantum_block.set_blocks:
+            if block is not None and not block.bottom_reach:
+                try:
+                    block.move_down(self)
+                except BottomReached:
+                    self._verify_bottom_reach_superposed_blocks(block)
+                else:
+                    self.update_grid()
 
     def move_current_block(self):
         # First check if there's something to move
@@ -130,8 +144,11 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             # Each function requires the group as the first argument to check any possible collision
             action[self._current_block_movement_heading](self)
         except BottomReached:
-            self.stop_moving_current_block()
-            self._create_new_block()
+            if self.current_block.quantum_block is None:  # Normal behavior of a block
+                self.stop_moving_current_block()
+                self._create_new_block()
+            else:
+                self._verify_bottom_reach_superposed_blocks(self.current_block)
         else:
             self.update_grid()
 
@@ -151,6 +168,74 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         if not isinstance(self.current_block, SquareBlock):
             self.current_block.rotate(self)
             self.update_grid()
+
+    def split_current_block(self):
+        curr = self.current_block
+        # Superposed current block
+        if curr.quantum_block is None:
+            # If the block does not yet belong to a set of superposed blocks
+            self.remove(curr)
+            QuantumBlock(curr, self)
+        else:
+            if curr.quantum_block.count < 4 and curr.is_50:
+                # Can split a 50% block into two 25% sub pieces
+                self.remove(curr)
+                curr.quantum_block.split_fifty_into_two(curr, self)
+
+        self.current_block.draw_highlight()
+        self.update_grid()
+
+    def exchange_superposed_blocks(self):
+        if self.current_block.quantum_block is not None:
+            pos_cur_in_quantum_block = self.current_block.quantum_block.set_blocks.index(self.current_block)
+            pos_next_in_quantum_block = 0 if pos_cur_in_quantum_block == 3 else pos_cur_in_quantum_block + 1
+            next_block = None
+            while next_block is None:
+                next_block = self.current_block.quantum_block.set_blocks[pos_next_in_quantum_block]
+                pos_next_in_quantum_block = 0 if pos_next_in_quantum_block == 3 else pos_next_in_quantum_block + 1
+            pos_block_in_sprites = len(self.sprites()) - self.sprites().index(next_block)
+            self._swap_block_with_top(pos_block_in_sprites)
+
+    def _swap_block_with_top(self, pos_block):
+        try:
+            top_block = self.sprites()[-1]
+            swap_block = self.sprites()[-pos_block]
+            top_block.current = False
+            swap_block.current = True
+            self.remove(top_block)
+            self.remove(swap_block)
+            self.add(top_block)
+            self.add(swap_block)
+
+            # redraw image block for the one that was in top
+            top_block.redraw()
+            # Indicate the one that it is current (on top) and therefore manipulable
+            self.current_block.draw_highlight()
+
+        except IndexError:
+            # both blocks have already reached the bottom, so the swap no longer makes sense
+            pass
+
+    def _verify_bottom_reach_superposed_blocks(self, curr):
+        self._validate_overlapping(curr)
+        curr.bottom_reach = True
+        # Current block has reached the bottom, check if any of its superpositions
+        # has not reaching the bottom yet
+        at_least_one = False
+        for block in curr.quantum_block.set_blocks:
+            if block is not None and not block.bottom_reach:
+                pos_block_in_sprites = len(self.sprites()) - self.sprites().index(block)
+                self._swap_block_with_top(pos_block_in_sprites)
+                at_least_one = True
+                break
+        if not at_least_one:
+            curr.redraw()
+            self.stop_moving_current_block()
+            self._create_new_block()
+
+    def _validate_overlapping(self, curr):
+        while Block.collide(curr, self):
+            curr.y -= 1
 
 
 def draw_grid(background):

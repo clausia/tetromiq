@@ -59,6 +59,10 @@ def game():
                         blocks.stop_moving_current_block()
                     elif event.key == pygame.K_UP:
                         blocks.rotate_current_block()
+                    elif event.key == pygame.K_h:
+                        blocks.split_current_block()
+                    elif event.key == pygame.K_TAB:
+                        blocks.exchange_superposed_blocks()
                 if event.key == pygame.K_p and not game_over:
                     paused = not paused
                 if game_over:

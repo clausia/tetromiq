@@ -180,7 +180,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self.remove(curr)
             QuantumBlock(curr, self)
         else:
-            if curr.quantum_block.size < 4:
+            if curr.quantum_block.count < 4 and curr.is_50:
                 # Can split a 50% block into two 25% sub pieces
                 self.remove(curr)
                 curr.quantum_block.split_fifty_into_two(curr, self)

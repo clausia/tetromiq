@@ -51,13 +51,30 @@ class Block(pygame.sprite.Sprite):
                     pygame.draw.rect(self.image, self.color,
                                      pygame.Rect(x * TILE_SIZE + 1, y * TILE_SIZE + 1,
                                                  TILE_SIZE - 2, TILE_SIZE - 2))
+                    self._draw_deep(x, y)
                     pygame.draw.rect(self.small_image, self.color,
                                      pygame.Rect(x * SMALL_TILE_SIZE + 1, y * SMALL_TILE_SIZE + 1,
                                                  SMALL_TILE_SIZE - 2, SMALL_TILE_SIZE - 2))
         self._create_mask()
 
+    def _draw_deep(self, x, y, width_highlight=1):
+        pygame.draw.line(self.image, (255, 255, 255),
+                         (x * TILE_SIZE + 5, y * TILE_SIZE + 5),
+                         (TILE_SIZE * (x + 1) - 6, y * TILE_SIZE + 5),
+                         width=width_highlight)
+        pygame.draw.line(self.image, (255, 255, 255),
+                         (TILE_SIZE * (x + 1) - 6, y * TILE_SIZE + 5),
+                         (TILE_SIZE * (x + 1) - 6, TILE_SIZE * (y + 1) - 6),
+                         width=width_highlight)
+
     def redraw(self):
         self._draw(self.x, self.y)
+
+    def draw_highlight(self):
+        for y, row in enumerate(self.struct):
+            for x, col in enumerate(row):
+                if col:
+                    self._draw_deep(x, y, 3)
 
     def _create_mask(self):
         """

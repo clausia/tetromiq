@@ -174,14 +174,16 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         if self.current_block.superposed is None:
             # If the block does not yet belong to a set of superposed blocks
             curr = self.current_block
-            self.remove(self.current_block)
+            self.remove(curr)
             superposed_set = QuantumBlock(curr, self)
         else:
             superposed_set = self.current_block.superposed
+            #if len(superposed_set) < 4:
 
         for sub_block in superposed_set.set_blocks:
             if sub_block is not None:
                 self.add(sub_block)
+        self.current_block.draw_highlight()
         self.update_grid()
 
     def exchange_superposed_blocks(self):
@@ -199,6 +201,12 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self.remove(swap_block)
             self.add(top_block)
             self.add(swap_block)
+
+            # redraw image block for the one that was in top
+            top_block.redraw()
+            # Indicate the one that it is current (on top) and therefore manipulable
+            self.current_block.draw_highlight()
+
         except IndexError:
             # both blocks have already reached the bottom, so the swap no longer makes sense
             pass
@@ -215,6 +223,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 at_least_one = True
                 break
         if not at_least_one:
+            self.current_block.redraw()
             self.stop_moving_current_block()
             self._create_new_block()
 

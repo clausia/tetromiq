@@ -52,7 +52,7 @@ class QuantumBlock:
 
         # The blocks are added in the order of creation, that is, in the sprite list,
         # the last block created is up to the "top"
-        self.set_blocks = [block_left, block_right, None, None]
+        self.set_blocks = [block_left, None, None, block_right]
 
     @staticmethod
     def _create_superposed_block(qb, original_block, left=True):

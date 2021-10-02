@@ -17,13 +17,15 @@ class Block(pygame.sprite.Sprite):
             # Ignore the current block which will always collide with itself
             if block == other_block:
                 continue
+            if other_block.quantum_block is not None and not other_block.bottom_reach:
+                continue
             if pygame.sprite.collide_mask(block, other_block) is not None:
                 return True
         return False
 
     def __init__(self):
         super().__init__()
-        self.superposed = None
+        self.quantum_block = None
         self.current = True
         self.struct = np.array(self.struct)
         # Initial random rotation

@@ -109,7 +109,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         return self.sprites()[-1]
 
     def update_current_block(self):
-        if self.current_block.superposed is None:  # Normal behavior of a block
+        if self.current_block.quantum_block is None:  # Normal behavior of a block
             try:
                 self.current_block.move_down(self)
             except BottomReached:
@@ -122,7 +122,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
 
     def _update_current_block_quantum(self):
         # Move down all superposed blocks
-        for block in self.current_block.superposed.set_blocks:
+        for block in self.current_block.quantum_block.set_blocks:
             if block is not None and not block.bottom_reach:
                 try:
                     block.move_down(self)
@@ -144,7 +144,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             # Each function requires the group as the first argument to check any possible collision
             action[self._current_block_movement_heading](self)
         except BottomReached:
-            if self.current_block.superposed is None:  # Normal behavior of a block
+            if self.current_block.quantum_block is None:  # Normal behavior of a block
                 self.stop_moving_current_block()
                 self._create_new_block()
             else:
@@ -170,26 +170,31 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self.update_grid()
 
     def split_current_block(self):
+        curr = self.current_block
         # Superposed current block
-        if self.current_block.superposed is None:
+        if curr.quantum_block is None:
             # If the block does not yet belong to a set of superposed blocks
-            curr = self.current_block
             self.remove(curr)
-            superposed_set = QuantumBlock(curr, self)
+            QuantumBlock(curr, self)
         else:
-            superposed_set = self.current_block.superposed
-            #if len(superposed_set) < 4:
+            if curr.quantum_block.count < 4:
+                # Can split a 50% block into two 25% sub pieces
+                self.remove(curr)
+                curr.quantum_block.split_fifty_into_two(curr, self)
 
-        for sub_block in superposed_set.set_blocks:
-            if sub_block is not None:
-                self.add(sub_block)
         self.current_block.draw_highlight()
         self.update_grid()
 
     def exchange_superposed_blocks(self):
-        if self.current_block.superposed is not None:
-            # TODO: verificar si hay mas de dos bloques super puestos, el TAB debe moverse entre todos, en orden
-            self._swap_block_with_top(2)
+        if self.current_block.quantum_block is not None:
+            pos_cur_in_quantum_block = self.current_block.quantum_block.set_blocks.index(self.current_block)
+            pos_next_in_quantum_block = 0 if pos_cur_in_quantum_block == 3 else pos_cur_in_quantum_block + 1
+            next_block = None
+            while next_block is None:
+                next_block = self.current_block.quantum_block.set_blocks[pos_next_in_quantum_block]
+                pos_next_in_quantum_block = 0 if pos_next_in_quantum_block == 3 else pos_next_in_quantum_block + 1
+            pos_block_in_sprites = len(self.sprites()) - self.sprites().index(next_block)
+            self._swap_block_with_top(pos_block_in_sprites)
 
     def _swap_block_with_top(self, pos_block):
         try:
@@ -216,7 +221,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         # Current block has reached the bottom, check if any of its superpositions
         # has not reaching the bottom yet
         at_least_one = False
-        for block in self.current_block.superposed.set_blocks:
+        for block in self.current_block.quantum_block.set_blocks:
             if block is not None and not block.bottom_reach:
                 pos_block_in_sprites = len(self.sprites()) - self.sprites().index(block)
                 self._swap_block_with_top(pos_block_in_sprites)

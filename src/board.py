@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from quantum_block import *
+from quantum import *
 import numpy as np
 import pygame
 
@@ -32,6 +33,11 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         # Start checking from the bottom
         for i, row in enumerate(self.grid[::-1]):
             if all(row):
+
+                if self._verify_if_quantum_block_involved(row, i):
+                    self._check_line_completion()
+                    break
+
                 self.score += 5
                 self.lines += 1
                 
@@ -41,9 +47,6 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         
                 # Get the blocks affected by the line deletion and remove duplicates
                 affected_blocks = list(OrderedDict.fromkeys(self.grid[-1 - i]))
-
-                # Position in which the line was created
-                line_position_y = NUM_ROWS - 1 - i
 
                 for block, y_offset in affected_blocks:
                     # Remove the block tiles which belong to the completed line
@@ -58,6 +61,9 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                     else:
                         # If the struct is empty then the block is gone
                         self.remove(block)
+
+                # Position in which the line was created
+                line_position_y = NUM_ROWS - 1 - i
 
                 # Only the blocks that are above the line should be moved down one position,
                 # as the line they were resting on has disappeared
@@ -79,17 +85,52 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 self._check_line_completion()
                 break
 
+    def _verify_if_quantum_block_involved(self, row, i):
+        # Check first if there is any quantum block involved in the creation of the line,
+        # because when collapsing it could be that the line is no longer created anymore
+        collapsed = False
+        for square in row:
+            if square != 0 and square[0].quantum_block is not None:
+                # The square belongs to a quantum block
+                collapsed_block = collapse(square[0].quantum_block)
+
+                for sub_block in square[0].quantum_block.set_blocks:
+                    if sub_block is not None and sub_block != collapsed_block:
+                        sub_block.quantum_block = None
+                        self.remove(sub_block)
+
+                self.update_grid()
+                self._move_down_blocks_above()
+
+                collapsed_block.color = collapsed_block.color_100
+                collapsed_block.redraw()
+                collapsed_block.quantum_block = None
+
+                collapsed = True
+        return collapsed
+
+    def _move_down_blocks_above(self):
+        for block in self:
+            if block.current:
+                continue
+            while True:
+                try:
+                    block.move_down(self)
+                except BottomReached:
+                    break
+        self.update_grid()
+
     def _reset_grid(self):
         self.grid = [[0 for _ in range(NUM_COLUMNS)] for _ in range(NUM_ROWS)]
 
     def _create_new_block(self):
+        self._check_line_completion()
         self._get_random_block()
         new_block = self.next_blocks.pop(0)
         self.add(new_block)
         self.update_grid()
         if Block.collide(new_block, self):
             raise TopReached
-        self._check_line_completion()
         self._get_random_block()
 
     def update_grid(self):
@@ -177,7 +218,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self.remove(curr)
             QuantumBlock(curr, self)
         else:
-            if curr.quantum_block.count < 4 and curr.is_50:
+            if curr.quantum_block.size < 4 and curr.is_50:
                 # Can split a 50% block into two 25% sub pieces
                 self.remove(curr)
                 curr.quantum_block.split_fifty_into_two(curr, self)

@@ -98,5 +98,5 @@ class QuantumBlock:
             self.set_blocks[3] = block_right
 
     @property
-    def count(self):
+    def size(self):
         return sum(1 for _ in filter(None.__ne__, self.set_blocks))

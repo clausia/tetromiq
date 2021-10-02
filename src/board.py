@@ -33,10 +33,14 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         # Start checking from the bottom
         for i, row in enumerate(self.grid[::-1]):
             if all(row):
-                self.score += 5
-                self.lines += 1
+
+                # Check first if there is any quantum block involved in the creation of the line,
+                # because when collapsing it could be that the line is no longer created anymore
                 if self.current_block.quantum_block is not None:
                     collapsed_block = collapse(self.current_block.quantum_block)
+
+                self.score += 5
+                self.lines += 1
                 
                 # Check if level changed
                 if self.lines >= LINES_TO_CHANGE_LEVEL * self.level:
@@ -86,13 +90,13 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         self.grid = [[0 for _ in range(NUM_COLUMNS)] for _ in range(NUM_ROWS)]
 
     def _create_new_block(self):
+        self._check_line_completion()
         self._get_random_block()
         new_block = self.next_blocks.pop(0)
         self.add(new_block)
         self.update_grid()
         if Block.collide(new_block, self):
             raise TopReached
-        self._check_line_completion()
         self._get_random_block()
 
     def update_grid(self):
@@ -180,7 +184,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self.remove(curr)
             QuantumBlock(curr, self)
         else:
-            if curr.quantum_block.count < 4 and curr.is_50:
+            if curr.quantum_block.size < 4 and curr.is_50:
                 # Can split a 50% block into two 25% sub pieces
                 self.remove(curr)
                 curr.quantum_block.split_fifty_into_two(curr, self)

@@ -16,6 +16,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         self.lines = 0
         self.level = 1
         self.next_blocks = []
+        self.collapsed_blocks = []
         # Not really moving, just to initialize the attribute
         self.stop_moving_current_block()
         # The first block to play with
@@ -38,7 +39,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                     self._check_line_completion()
                     break
 
-                self.score += 5
+                self.score += self._determine_increase_score(row)
                 self.lines += 1
                 
                 # Check if level changed
@@ -83,7 +84,8 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 # Since we've updated the grid, now the i counter is no longer valid, so call the
                 # function again to check if there are other completed lines in the new grid
                 self._check_line_completion()
-                break
+                break   
+        self.collapsed_blocks.clear()
 
     def _verify_if_quantum_block_involved(self, row, i):
         # Check first if there is any quantum block involved in the creation of the line,
@@ -95,7 +97,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 collapsed_block = collapse(square[0].quantum_block)
 
                 for sub_block in square[0].quantum_block.set_blocks:
-                    if sub_block is not None and sub_block != collapsed_block:
+                    if sub_block is not None and sub_block is not collapsed_block:
                         sub_block.quantum_block = None
                         self.remove(sub_block)
 
@@ -106,8 +108,27 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 collapsed_block.redraw()
                 collapsed_block.quantum_block = None
 
+                self.collapsed_blocks.append(collapsed_block)
+
                 collapsed = True
         return collapsed
+    
+    def _determine_increase_score(self, row):
+        if len(self.collapsed_blocks) == 0:
+            return SCORE_INCREMENT
+        else:
+            factor = 1
+            for block in self.collapsed_blocks:
+                for square in row:
+                    if square != 0 and square[0] is block:
+                        # If the collapsed block is part of a line, the score is increased 
+                        # by a factor of 2 for pieces in superposition at 50% or 
+                        # by a factor of 4 for pieces in superposition at 25%.
+                        factor = factor * (2 if block.is_50 else 4)
+                        break
+                
+            return SCORE_INCREMENT * factor
+
 
     def _move_down_blocks_above(self):
         for block in self:

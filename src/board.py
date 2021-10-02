@@ -234,13 +234,6 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self._create_new_block()
 
     def _validate_overlapping(self, curr):
-        #for block in curr.quantum_block.set_blocks:
-        #    if block is None:
-        #        continue
-        #    if block == curr or not block.bottom_reach:
-        #        continue
-        #    while pygame.sprite.collide_mask(block, curr) is not None:
-        #        curr.y -= 1
         while Block.collide(curr, self):
             curr.y -= 1
 

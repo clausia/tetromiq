@@ -85,10 +85,10 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
     def _create_new_block(self):
         self._get_random_block()
         new_block = self.next_blocks.pop(0)
-        if Block.collide(new_block, self):
-            raise TopReached
         self.add(new_block)
         self.update_grid()
+        if Block.collide(new_block, self):
+            raise TopReached
         self._check_line_completion()
         self._get_random_block()
 
@@ -127,7 +127,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 try:
                     block.move_down(self)
                 except BottomReached:
-                    self._verify_bottom_reach_superposed_blocks()
+                    self._verify_bottom_reach_superposed_blocks(block)
                 else:
                     self.update_grid()
 
@@ -148,7 +148,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 self.stop_moving_current_block()
                 self._create_new_block()
             else:
-                self._verify_bottom_reach_superposed_blocks()
+                self._verify_bottom_reach_superposed_blocks(self.current_block)
         else:
             self.update_grid()
 
@@ -216,21 +216,35 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             # both blocks have already reached the bottom, so the swap no longer makes sense
             pass
 
-    def _verify_bottom_reach_superposed_blocks(self):
-        self.current_block.bottom_reach = True
+    def _verify_bottom_reach_superposed_blocks(self, curr):
+        self._validate_overlapping(curr)
+        print("Current pos:(", curr.x, ",", curr.y, ")")
+        print("Current struct:\n", curr.struct)
+        curr.bottom_reach = True
         # Current block has reached the bottom, check if any of its superpositions
         # has not reaching the bottom yet
         at_least_one = False
-        for block in self.current_block.quantum_block.set_blocks:
+        for block in curr.quantum_block.set_blocks:
             if block is not None and not block.bottom_reach:
                 pos_block_in_sprites = len(self.sprites()) - self.sprites().index(block)
                 self._swap_block_with_top(pos_block_in_sprites)
                 at_least_one = True
                 break
         if not at_least_one:
-            self.current_block.redraw()
+            curr.redraw()
             self.stop_moving_current_block()
             self._create_new_block()
+
+    def _validate_overlapping(self, curr):
+        #for block in curr.quantum_block.set_blocks:
+        #    if block is None:
+        #        continue
+        #    if block == curr or not block.bottom_reach:
+        #        continue
+        #    while pygame.sprite.collide_mask(block, curr) is not None:
+        #        curr.y -= 1
+        while Block.collide(curr, self):
+            curr.y -= 1
 
 
 def draw_grid(background):

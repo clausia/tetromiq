@@ -218,8 +218,6 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
 
     def _verify_bottom_reach_superposed_blocks(self, curr):
         self._validate_overlapping(curr)
-        print("Current pos:(", curr.x, ",", curr.y, ")")
-        print("Current struct:\n", curr.struct)
         curr.bottom_reach = True
         # Current block has reached the bottom, check if any of its superpositions
         # has not reaching the bottom yet

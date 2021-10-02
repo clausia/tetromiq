@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from quantum_block import *
+from quantum import *
 import numpy as np
 import pygame
 
@@ -34,6 +35,8 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             if all(row):
                 self.score += 5
                 self.lines += 1
+                if self.current_block.quantum_block is not None:
+                    collapsed_block = collapse(self.current_block.quantum_block)
                 
                 # Check if level changed
                 if self.lines >= LINES_TO_CHANGE_LEVEL * self.level:
@@ -177,7 +180,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self.remove(curr)
             QuantumBlock(curr, self)
         else:
-            if curr.quantum_block.count < 4:
+            if curr.quantum_block.size < 4:
                 # Can split a 50% block into two 25% sub pieces
                 self.remove(curr)
                 curr.quantum_block.split_fifty_into_two(curr, self)

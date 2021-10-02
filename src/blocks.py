@@ -1,4 +1,3 @@
-import copy
 import random
 import pygame
 import numpy as np

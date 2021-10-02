@@ -1,3 +1,4 @@
+import copy
 import random
 import pygame
 import numpy as np
@@ -16,15 +17,18 @@ class Block(pygame.sprite.Sprite):
             # Ignore the current block which will always collide with itself
             if block == other_block:
                 continue
+            if other_block.quantum_block is not None and not other_block.bottom_reach:
+                continue
             if pygame.sprite.collide_mask(block, other_block) is not None:
                 return True
         return False
 
     def __init__(self):
         super().__init__()
+        self.quantum_block = None
         self.current = True
         self.struct = np.array(self.struct)
-        # Initial random rotation and flip
+        # Initial random rotation
         if random.randint(0, 1):
             self.struct = np.rot90(self.struct)
         self._draw()
@@ -49,13 +53,30 @@ class Block(pygame.sprite.Sprite):
                     pygame.draw.rect(self.image, self.color,
                                      pygame.Rect(x * TILE_SIZE + 1, y * TILE_SIZE + 1,
                                                  TILE_SIZE - 2, TILE_SIZE - 2))
+                    self._draw_deep(x, y)
                     pygame.draw.rect(self.small_image, self.color,
                                      pygame.Rect(x * SMALL_TILE_SIZE + 1, y * SMALL_TILE_SIZE + 1,
                                                  SMALL_TILE_SIZE - 2, SMALL_TILE_SIZE - 2))
         self._create_mask()
 
+    def _draw_deep(self, x, y, width_highlight=1):
+        pygame.draw.line(self.image, (255, 255, 255),
+                         (x * TILE_SIZE + 5, y * TILE_SIZE + 5),
+                         (TILE_SIZE * (x + 1) - 6, y * TILE_SIZE + 5),
+                         width=width_highlight)
+        pygame.draw.line(self.image, (255, 255, 255),
+                         (TILE_SIZE * (x + 1) - 6, y * TILE_SIZE + 5),
+                         (TILE_SIZE * (x + 1) - 6, TILE_SIZE * (y + 1) - 6),
+                         width=width_highlight)
+
     def redraw(self):
         self._draw(self.x, self.y)
+
+    def draw_highlight(self):
+        for y, row in enumerate(self.struct):
+            for x, col in enumerate(row):
+                if col:
+                    self._draw_deep(x, y, 3)
 
     def _create_mask(self):
         """
@@ -137,7 +158,10 @@ class SquareBlock(Block):
         (1, 1),
         (1, 1)
     )
-    color = (92, 142, 38)
+    color_100 = (92, 142, 38)
+    color_50 = (146, 208, 80)
+    color_25 = (196, 229, 159)
+    color = color_100
 
 
 class TBlock(Block):
@@ -145,7 +169,10 @@ class TBlock(Block):
         (1, 1, 1),
         (0, 1, 0)
     )
-    color = (255, 51, 204)
+    color_100 = (255, 51, 204)
+    color_50 = (255, 139, 225)
+    color_25 = (255, 205, 242)
+    color = color_100
 
 
 class LineBlock(Block):
@@ -155,7 +182,10 @@ class LineBlock(Block):
         (1,),
         (1,)
     )
-    color = (0, 176, 240)
+    color_100 = (0, 136, 184)
+    color_50 = (5, 190, 255)
+    color_25 = (113, 218, 255)
+    color = color_100
 
 
 class LBlock(Block):
@@ -164,7 +194,10 @@ class LBlock(Block):
         (1, 0),
         (1, 0),
     )
-    color = (112, 48, 160)
+    color_100 = (112, 48, 160)
+    color_50 = (165, 104, 210)
+    color_25 = (205, 172, 230)
+    color = color_100
 
 
 class LIBlock(Block):
@@ -173,7 +206,10 @@ class LIBlock(Block):
         (0, 1),
         (0, 1),
     )
-    color = (238, 138, 18)
+    color_100 = (238, 138, 18)
+    color_50 = (245, 186, 115)
+    color_25 = (250, 222, 188)
+    color = color_100
 
 
 class ZBlock(Block):
@@ -182,7 +218,10 @@ class ZBlock(Block):
         (1, 1),
         (1, 0),
     )
-    color = (172, 0, 0)
+    color_100 = (172, 0, 0)
+    color_50 = (255, 0, 0)
+    color_25 = (255, 113, 113)
+    color = color_100
 
 
 class ZIBlock(Block):
@@ -191,4 +230,7 @@ class ZIBlock(Block):
         (1, 1),
         (0, 1),
     )
-    color = (0, 81, 242)
+    color_100 = (0, 81, 242)
+    color_50 = (91, 146, 255)
+    color_25 = (171, 199, 255)
+    color = color_100

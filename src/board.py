@@ -118,16 +118,18 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             else:
                 self.update_grid()
         else:                                      # Superposed block behavior
-            self.update_current_block_quantum()
+            self._update_current_block_quantum()
 
-    def update_current_block_quantum(self):
-        try:
-            # Move down all superposed blocks
-            for block in self.current_block.superposed.set_blocks:
-                if block is not None:
+    def _update_current_block_quantum(self):
+        # Move down all superposed blocks
+        for block in self.current_block.superposed.set_blocks:
+            if block is not None and not block.bottom_reach:
+                try:
                     block.move_down(self)
-        except BottomReached:
-            self._bottom_reach_superposed_block()
+                except BottomReached:
+                    self._verify_bottom_reach_superposed_blocks()
+                else:
+                    self.update_grid()
 
     def move_current_block(self):
         # First check if there's something to move
@@ -146,7 +148,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 self.stop_moving_current_block()
                 self._create_new_block()
             else:
-                self._bottom_reach_superposed_block()
+                self._verify_bottom_reach_superposed_blocks()
         else:
             self.update_grid()
 
@@ -201,20 +203,17 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             # both blocks have already reached the bottom, so the swap no longer makes sense
             pass
 
-    def _bottom_reach_superposed_block(self):
+    def _verify_bottom_reach_superposed_blocks(self):
         self.current_block.bottom_reach = True
         # Current block has reached the bottom, check if any of its superpositions
         # has not reaching the bottom yet
         at_least_one = False
         for block in self.current_block.superposed.set_blocks:
-            if block is not None:
-                if not block.bottom_reach:
-                    block.current = True
-                    pos_block_in_sprites = len(self.sprites()) - self.sprites().index(block)
-                    self._swap_block_with_top(pos_block_in_sprites)
-                    at_least_one = True
-                    break
-        # TODO: no es cierto esto, o si? cuando llega uno de los dos superpuestos, se detienen el que falta por llegar despues de avanzar un cuadro solamente
+            if block is not None and not block.bottom_reach:
+                pos_block_in_sprites = len(self.sprites()) - self.sprites().index(block)
+                self._swap_block_with_top(pos_block_in_sprites)
+                at_least_one = True
+                break
         if not at_least_one:
             self.stop_moving_current_block()
             self._create_new_block()

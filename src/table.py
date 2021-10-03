@@ -1,6 +1,7 @@
 from pathlib import Path
 import pygame
 from constants import *
+from cryptography.fernet import Fernet
 
 
 class ScoreTable:
@@ -19,10 +20,12 @@ class ScoreTable:
         self.show_high_scores = False
         self.high_scores = []
         self.high_score_table = []
-        self.read_high_score = open(Path("../resources/scores.txt"), "r")
+        self.high_score_path = Path("../resources/scores.txt")
 
     def prepare_score_table(self, blocks_score):
-        for score_entry in self.read_high_score:
+        decrypt(self.high_score_path)
+        decrypted_file = open(self.high_score_path, "r")
+        for score_entry in decrypted_file:
             if len(score_entry) > 2:
                 edited_entry = score_entry.strip("\n")
                 edited_entry = edited_entry.split("=")
@@ -39,11 +42,12 @@ class ScoreTable:
         if len(self.high_score_table) < 10:
             self.high_score_table.append([blocks_score, self.username])
             self.high_scores.append(blocks_score)
-        write_high_score = open(Path("../resources/scores.txt"), "w")
+        write_high_score = open(self.high_score_path, "w")
         line_content = ''
         for place_entry in self.high_score_table:
             line_content += str(place_entry[0]) + "=" + place_entry[1] + '\n'
         write_high_score.write(line_content)
+        encrypt(self.high_score_path)
         self.show_high_scores = True
 
     def activate_input_box(self, position):
@@ -130,3 +134,37 @@ def draw_table_entry(screen, place_entry_rank, place_entry_username, place_entry
     screen.blit(place_entry_rank, (int(GRID_WIDTH / 5.5), int((GRID_HEIGHT / 7) + 1.5 * place_idx * TILE_SIZE)))
     screen.blit(place_entry_username, (int(GRID_WIDTH / 2), int((GRID_HEIGHT / 7) + 1.5 * place_idx * TILE_SIZE)))
     screen.blit(place_entry_score, (int(GRID_WIDTH / 0.73), int((GRID_HEIGHT / 7) + 1.5 * place_idx * TILE_SIZE)))
+
+
+def encrypt(filename, key='z38YBP7AjBU15tKNqDvKsJJv8aWUbnH9F9ymybTIRuo='):
+    """
+    Given a filename (str) and key (bytes), it encrypts the file and write it
+    """
+    f = Fernet(key)
+
+    with open(filename, "rb") as file:
+        # read all file data
+        file_data = file.read()
+
+    # encrypt data
+    encrypted_data = f.encrypt(file_data)
+
+    # write the encrypted file
+    with open(filename, "wb") as file:
+        file.write(encrypted_data)
+
+
+def decrypt(filename, key='z38YBP7AjBU15tKNqDvKsJJv8aWUbnH9F9ymybTIRuo='):
+    """
+    Given a filename (str) and key (bytes), it decrypts the file and write it
+    """
+    f = Fernet(key)
+    with open(filename, "rb") as file:
+        # read the encrypted data
+        encrypted_data = file.read()
+    # decrypt data
+    decrypted_data = f.decrypt(encrypted_data)
+    # write the original file
+    with open(filename, "wb") as file:
+        file.write(decrypted_data)
+

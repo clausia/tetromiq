@@ -1,6 +1,7 @@
 from pathlib import Path
 from board import *
 from table import *
+from effects import *
 import cv2
 
 
@@ -50,6 +51,7 @@ def game():
     pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
     pygame.time.set_timer(EVENT_MOVE_CURRENT_BLOCK, 100)
 
+    effects = Effects()
     blocks = BlocksGroup()
     score_table = ScoreTable()
 
@@ -63,13 +65,21 @@ def game():
                     if event.key in MOVEMENT_KEYS:
                         blocks.stop_moving_current_block()
                     elif event.key == pygame.K_UP:
-                        blocks.rotate_current_block()
+                        blocks.rotate_current_block(effects)
                     elif event.key == pygame.K_h:
-                        blocks.split_current_block()
+                        blocks.split_current_block(effects)
                     elif event.key == pygame.K_TAB:
-                        blocks.exchange_superposed_blocks()
+                        blocks.exchange_superposed_blocks(effects)
+                    elif event.key == pygame.K_m:
+                        effects.mute_unmute_music()
+                    elif event.key == pygame.K_n:
+                        effects.mute_unmute_sound()
                 if event.key == pygame.K_p and not game_over:
                     paused = not paused
+                    if paused:
+                        pygame.mixer.pause()
+                    else:
+                        pygame.mixer.unpause()
                 if game_over:
                     score_table.type_input_in_box(event, blocks.score)
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -85,9 +95,9 @@ def game():
 
             try:
                 if event.type == EVENT_UPDATE_CURRENT_BLOCK:
-                    blocks.update_current_block()
+                    blocks.update_current_block(effects)
                 elif event.type == EVENT_MOVE_CURRENT_BLOCK:
-                    blocks.move_current_block()
+                    blocks.move_current_block(effects)
             except TopReached:
                 game_over = True
 

@@ -1,6 +1,8 @@
 from pathlib import Path
 from board import *
 from table import *
+from effects import *
+import cv2
 
 
 def draw_centered_surface(screen, surface, y):
@@ -11,6 +13,10 @@ def game():
     pygame.init()
     pygame.display.set_caption("TetromiQ")
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    game_icon = pygame.image.load(Path("../resources/tqicon.png")).convert()
+    pygame.display.set_icon(game_icon)
+    pygame.display.update()
+    play_intro(screen)
     run = True
     paused = False
     game_over = False
@@ -47,6 +53,7 @@ def game():
     pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
     pygame.time.set_timer(EVENT_MOVE_CURRENT_BLOCK, 100)
 
+    effects = Effects()
     blocks = BlocksGroup()
     score_table = ScoreTable()
 
@@ -60,13 +67,21 @@ def game():
                     if event.key in MOVEMENT_KEYS:
                         blocks.stop_moving_current_block()
                     elif event.key == pygame.K_UP:
-                        blocks.rotate_current_block()
+                        blocks.rotate_current_block(effects)
                     elif event.key == pygame.K_h:
-                        blocks.split_current_block()
+                        blocks.split_current_block(effects)
                     elif event.key == pygame.K_TAB:
-                        blocks.exchange_superposed_blocks()
+                        blocks.exchange_superposed_blocks(effects)
+                    elif event.key == pygame.K_m:
+                        effects.mute_unmute_music()
+                    elif event.key == pygame.K_n:
+                        effects.mute_unmute_sound()
                 if event.key == pygame.K_p and not game_over:
                     paused = not paused
+                    if paused:
+                        pygame.mixer.pause()
+                    else:
+                        pygame.mixer.unpause()
                 if game_over:
                     score_table.type_input_in_box(event, blocks.score)
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -82,9 +97,9 @@ def game():
 
             try:
                 if event.type == EVENT_UPDATE_CURRENT_BLOCK:
-                    blocks.update_current_block()
+                    blocks.update_current_block(effects)
                 elif event.type == EVENT_MOVE_CURRENT_BLOCK:
-                    blocks.move_current_block()
+                    blocks.move_current_block(effects)
             except TopReached:
                 game_over = True
 
@@ -123,11 +138,34 @@ def game():
         fall_speed, previous_level = update_fall_speed(
             blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_BLOCK)
 
-        # Update.
+        # Update
         pygame.display.flip()
 
-       
     pygame.quit()
+
+
+def play_intro(window):
+    video = cv2.VideoCapture("../resources/intro.mp4")
+    success, video_image = video.read()
+    fps = video.get(cv2.CAP_PROP_FPS)
+
+    #window = pygame.display.set_mode(video_image.shape[1::-1])
+    clock = pygame.time.Clock()
+
+    run = success
+    while run:
+        clock.tick(fps)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+        success, video_image = video.read()
+        if success:
+            video_surf = pygame.image.frombuffer(video_image.tobytes(), video_image.shape[1::-1], "BGR")
+        else:
+            run = False
+        window.blit(video_surf, (-163, -240))
+        pygame.display.flip()
 
 
 def update_fall_speed(blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_BLOCK):

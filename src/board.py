@@ -3,6 +3,7 @@ from quantum_block import *
 from quantum import *
 import numpy as np
 import pygame
+from pathlib import Path
 
 
 class BlocksGroup(pygame.sprite.OrderedUpdates):
@@ -16,6 +17,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         self.lines = 0
         self.level = 1
         self.next_blocks = []
+        self.collapsed_blocks = []
         # Not really moving, just to initialize the attribute
         self.stop_moving_current_block()
         # The first block to play with
@@ -26,7 +28,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             self.next_blocks.append(
                 np.random.choice((SquareBlock, TBlock, LineBlock, LBlock, LIBlock, ZBlock, ZIBlock))())
 
-    def _check_line_completion(self):
+    def _check_line_completion(self, effects):
         """
         Check each line of the grid and remove the ones that are complete.
         """
@@ -35,15 +37,19 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
             if all(row):
 
                 if self._verify_if_quantum_block_involved(row, i):
-                    self._check_line_completion()
+                    self._check_line_completion(effects)
                     break
 
-                self.score += 5
+                self.score += self._determine_increase_score(row)
                 self.lines += 1
+                if effects:
+                    effects.play_line_created_sound()
                 
                 # Check if level changed
                 if self.lines >= LINES_TO_CHANGE_LEVEL * self.level:
                     self.level += 1
+                    if effects:
+                        effects.play_level_up_sound()
         
                 # Get the blocks affected by the line deletion and remove duplicates
                 affected_blocks = list(OrderedDict.fromkeys(self.grid[-1 - i]))
@@ -82,8 +88,10 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 self.update_grid()
                 # Since we've updated the grid, now the i counter is no longer valid, so call the
                 # function again to check if there are other completed lines in the new grid
-                self._check_line_completion()
+                self._check_line_completion(effects)
                 break
+    
+        self.collapsed_blocks.clear()
 
     def _verify_if_quantum_block_involved(self, row, i):
         # Check first if there is any quantum block involved in the creation of the line,
@@ -95,7 +103,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 collapsed_block = collapse(square[0].quantum_block)
 
                 for sub_block in square[0].quantum_block.set_blocks:
-                    if sub_block is not None and sub_block != collapsed_block:
+                    if sub_block is not None and sub_block is not collapsed_block:
                         sub_block.quantum_block = None
                         self.remove(sub_block)
 
@@ -106,8 +114,27 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 collapsed_block.redraw()
                 collapsed_block.quantum_block = None
 
+                self.collapsed_blocks.append(collapsed_block)
+
                 collapsed = True
         return collapsed
+    
+    def _determine_increase_score(self, row):
+        if len(self.collapsed_blocks) == 0:
+            return SCORE_INCREMENT
+        else:
+            factor = 1
+            for block in self.collapsed_blocks:
+                for square in row:
+                    if square != 0 and square[0] is block:
+                        # If the collapsed block is part of a line, the score is increased 
+                        # by a factor of 2 for pieces in superposition at 50% or 
+                        # by a factor of 4 for pieces in superposition at 25%.
+                        factor = factor * (2 if block.is_50 else 4)
+                        break
+                
+            return SCORE_INCREMENT * factor
+
 
     def _move_down_blocks_above(self):
         for block in self:
@@ -123,8 +150,8 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
     def _reset_grid(self):
         self.grid = [[0 for _ in range(NUM_COLUMNS)] for _ in range(NUM_ROWS)]
 
-    def _create_new_block(self):
-        self._check_line_completion()
+    def _create_new_block(self, effects=None):
+        self._check_line_completion(effects)
         self._get_random_block()
         new_block = self.next_blocks.pop(0)
         self.add(new_block)
@@ -149,13 +176,13 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
     def current_block(self):
         return self.sprites()[-1]
 
-    def update_current_block(self):
+    def update_current_block(self, effects):
         if self.current_block.quantum_block is None:  # Normal behavior of a block
             try:
                 self.current_block.move_down(self)
             except BottomReached:
                 self.stop_moving_current_block()
-                self._create_new_block()
+                self._create_new_block(effects)
             else:
                 self.update_grid()
         else:                                      # Superposed block behavior
@@ -172,7 +199,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 else:
                     self.update_grid()
 
-    def move_current_block(self):
+    def move_current_block(self, effects):
         # First check if there's something to move
         if self._current_block_movement_heading is None:
             return
@@ -187,11 +214,12 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         except BottomReached:
             if self.current_block.quantum_block is None:  # Normal behavior of a block
                 self.stop_moving_current_block()
-                self._create_new_block()
+                self._create_new_block(effects)
             else:
                 self._verify_bottom_reach_superposed_blocks(self.current_block)
         else:
             self.update_grid()
+            effects.play_piece_moved_sound()
 
     def start_moving_current_block(self, key):
         if self._current_block_movement_heading is not None:
@@ -204,13 +232,14 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
         else:
             self._current_block_movement_heading = None
 
-    def rotate_current_block(self):
+    def rotate_current_block(self, effects):
         # Prevent SquareBlocks rotation
         if not isinstance(self.current_block, SquareBlock):
             self.current_block.rotate(self)
             self.update_grid()
+            effects.play_piece_rotated_sound()
 
-    def split_current_block(self):
+    def split_current_block(self, effects):
         curr = self.current_block
         # Superposed current block
         if curr.quantum_block is None:
@@ -225,8 +254,9 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
 
         self.current_block.draw_highlight()
         self.update_grid()
+        effects.play_piece_split_sound()
 
-    def exchange_superposed_blocks(self):
+    def exchange_superposed_blocks(self, effects):
         if self.current_block.quantum_block is not None:
             pos_cur_in_quantum_block = self.current_block.quantum_block.set_blocks.index(self.current_block)
             pos_next_in_quantum_block = 0 if pos_cur_in_quantum_block == 3 else pos_cur_in_quantum_block + 1
@@ -236,6 +266,7 @@ class BlocksGroup(pygame.sprite.OrderedUpdates):
                 pos_next_in_quantum_block = 0 if pos_next_in_quantum_block == 3 else pos_next_in_quantum_block + 1
             pos_block_in_sprites = len(self.sprites()) - self.sprites().index(next_block)
             self._swap_block_with_top(pos_block_in_sprites)
+            effects.play_superposition_exchange_sound()
 
     def _swap_block_with_top(self, pos_block):
         try:

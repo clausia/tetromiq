@@ -24,4 +24,5 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     include_package_data=True,
+    install_requires=requirements,
 )

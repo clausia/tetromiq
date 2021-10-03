@@ -145,7 +145,7 @@ def game():
 
 
 def play_intro(window):
-    video = cv2.VideoCapture("../resources/intro.mp4")
+    video = cv2.VideoCapture("./resources/intro.mp4")
     success, video_image = video.read()
     fps = video.get(cv2.CAP_PROP_FPS)
 

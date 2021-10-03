@@ -12,6 +12,9 @@ def game():
     pygame.init()
     pygame.display.set_caption("TetromiQ")
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    game_icon = pygame.image.load(Path("../resources/tqicon.png")).convert()
+    pygame.display.set_icon(game_icon)
+    pygame.display.update()
     play_intro(screen)
     run = True
     paused = False
@@ -120,7 +123,7 @@ def game():
         fall_speed, previous_level = update_fall_speed(
             blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_BLOCK)
 
-        # Update.
+        # Update
         pygame.display.flip()
 
     pygame.quit()

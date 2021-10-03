@@ -1,6 +1,6 @@
 from pathlib import Path
-from board import *
-from table import *
+from src.board import *
+from src.table import *
 
 
 def draw_centered_surface(screen, surface, y):
@@ -139,9 +139,5 @@ def update_fall_speed(blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_B
             pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, 0)
             pygame.time.set_timer(EVENT_UPDATE_CURRENT_BLOCK, fall_speed)
 
-    
     return fall_speed, previous_level
 
-
-if __name__ == "__main__":
-    game()

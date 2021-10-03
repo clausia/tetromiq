@@ -1,8 +1,8 @@
 import random
 import pygame
 import numpy as np
-from constants import *
-from exceptions import *
+from src.constants import *
+from src.exceptions import *
 
 
 class Block(pygame.sprite.Sprite):

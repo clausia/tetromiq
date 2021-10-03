@@ -18,6 +18,8 @@ Required packages
 > pip install numpy
 > 
 > pip install qiskit
+> 
+> pip install opencv-python
 
 How to run
 

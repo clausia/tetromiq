@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from quantum_block import *
-from quantum import *
+from src.quantum_block import *
+from src.quantum import *
 import numpy as np
 import pygame
 from pathlib import Path

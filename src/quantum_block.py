@@ -1,4 +1,4 @@
-from blocks import *
+from src.blocks import *
 
 
 class QuantumBlock:

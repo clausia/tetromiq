@@ -1,7 +1,7 @@
 from pathlib import Path
-from board import *
-from table import *
-from effects import *
+from src.board import *
+from src.table import *
+from src.effects import *
 import cv2
 
 
@@ -13,7 +13,7 @@ def game():
     pygame.init()
     pygame.display.set_caption("TetromiQ")
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    game_icon = pygame.image.load(Path("../resources/tqicon.png")).convert()
+    game_icon = pygame.image.load(Path("./resources/tqicon.png")).convert()
     pygame.display.set_icon(game_icon)
     pygame.display.update()
     play_intro(screen)
@@ -34,8 +34,8 @@ def game():
     font = pygame.font.SysFont(None, 30)
     fontSymbols = pygame.font.SysFont(None, 30)
     try:
-        font = pygame.font.Font(Path("../resources/Roboto-Regular.ttf"), 20)
-        fontSymbols = pygame.font.Font(Path("../resources/seguisym.ttf"), 20)
+        font = pygame.font.Font(Path("./resources/Roboto-Regular.ttf"), 20)
+        fontSymbols = pygame.font.Font(Path("./resources/seguisym.ttf"), 20)
     except OSError:
         # If the font file is not available, the default will be used
         pass
@@ -145,7 +145,7 @@ def game():
 
 
 def play_intro(window):
-    video = cv2.VideoCapture("../resources/intro.mp4")
+    video = cv2.VideoCapture("./resources/intro.mp4")
     success, video_image = video.read()
     fps = video.get(cv2.CAP_PROP_FPS)
 
@@ -194,5 +194,3 @@ def draw_bottom(screen, background, bgcolor, fontSymbols):
     bottom_msg_text = fontSymbols.render(text_controls, True, (255, 255, 255), bgcolor)
     screen.blit(bottom_msg_text, ((WINDOW_WIDTH - bottom_msg_text.get_width()) / 2, GRID_HEIGHT + bottom_msg_text1.get_height() + 10))
 
-if __name__ == "__main__":
-    game()

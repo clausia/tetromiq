@@ -31,8 +31,8 @@ def game():
     # This makes blitting faster
     background = background.convert()
     
-    font = pygame.font.SysFont(None, 30)
-    fontSymbols = pygame.font.SysFont(None, 30)
+    font = pygame.font.SysFont("arial", 30)
+    fontSymbols = pygame.font.SysFont("arial", 30)
     try:
         font = pygame.font.Font(Path("./resources/Roboto-Regular.ttf"), 20)
         fontSymbols = pygame.font.Font(Path("./resources/seguisym.ttf"), 20)

@@ -186,10 +186,13 @@ def update_fall_speed(blocks, fall_speed, previous_level, EVENT_UPDATE_CURRENT_B
 def draw_bottom(screen, background, bgcolor, fontSymbols):
     pygame.draw.line(background, (50, 50, 50), (0, GRID_HEIGHT), (WINDOW_WIDTH, GRID_HEIGHT))
     
-    # "ᐊ ᐁ ᐅ Move  ᐃ Rotate  [H] Hadamard  ⇆ Swap  [P] Pause"
-    text = "\u25C0 \u25BC \u25B6 Move  \u25B2 Rotate  [H] Hadamard  \u21B9 Swap  [P] Pause"
-    bottom_msg_text = fontSymbols.render(text, True, (255, 255, 255), bgcolor)
-    screen.blit(bottom_msg_text, ((WINDOW_WIDTH - bottom_msg_text.get_width()) / 2, GRID_HEIGHT + 10))
+    # "ᐊ ᐁ ᐅ Move  ᐃ Rotate  [H] Hadamard  ⇆ Swap"
+    text_movements = "\u25C0 \u25BC \u25B6 Move  \u25B2 Rotate  [H] Hadamard  \u21B9 Swap"
+    bottom_msg_text1 = fontSymbols.render(text_movements, True, (255, 255, 255), bgcolor)
+    screen.blit(bottom_msg_text1, ((WINDOW_WIDTH - bottom_msg_text1.get_width()) / 2, GRID_HEIGHT + 10))
+    text_controls = "[P] Pause  [M] Music on/off  [N] Sound effects on/off"
+    bottom_msg_text = fontSymbols.render(text_controls, True, (255, 255, 255), bgcolor)
+    screen.blit(bottom_msg_text, ((WINDOW_WIDTH - bottom_msg_text.get_width()) / 2, GRID_HEIGHT + bottom_msg_text1.get_height() + 10))
 
 if __name__ == "__main__":
     game()

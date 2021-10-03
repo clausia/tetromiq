@@ -1,0 +1,5 @@
+pygame==2.0.1
+numpy==1.21.2
+opencv_python==4.5.3.56
+qiskit_terra==0.18.3
+qiskit==0.30.1

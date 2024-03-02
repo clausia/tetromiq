@@ -70,7 +70,7 @@ def collapse_three_states(set_blocks):
 
     # apply second Hadamard if the measurement outcome is 0
     qc.h(1).c_if(c, 2 if set_blocks.index(None) == 1 else 1)
-    qc.measure(q, c)
+    qc.measure(q[1], c[1])
 
     result_state = list(execute(qc, Aer.get_backend('qasm_simulator'), shots=1).result().get_counts(qc).keys())[0]
 
